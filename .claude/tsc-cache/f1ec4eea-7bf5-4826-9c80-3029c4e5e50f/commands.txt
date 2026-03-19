@@ -1,0 +1,2 @@
+frontend:build:cd /Users/chajinhyeog/workspace/advanced-harness/frontend && pnpm build
+frontend:tsc:cd /Users/chajinhyeog/workspace/advanced-harness/frontend && npx tsc --noEmit

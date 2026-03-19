@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:overlink.kr)",
+      "WebFetch(domain:www.themango.co.kr)",
+      "WebSearch"
+    ]
+  }
+}

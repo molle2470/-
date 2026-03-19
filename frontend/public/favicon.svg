@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#558C8C"/>
+      <stop offset="100%" style="stop-color:#3D6B6B"/>
+    </linearGradient>
+    <linearGradient id="play" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF"/>
+      <stop offset="100%" style="stop-color:#EFF7FF"/>
+    </linearGradient>
+  </defs>
+  <!-- Rounded square background -->
+  <rect width="512" height="512" rx="112" ry="112" fill="url(#bg)"/>
+  <!-- Play triangle integrated with C shape -->
+  <!-- Outer C arc -->
+  <path d="M310 156 A120 120 0 1 0 310 356" fill="none" stroke="url(#play)" stroke-width="52" stroke-linecap="round"/>
+  <!-- Play triangle inside the C opening -->
+  <polygon points="296,208 296,304 376,256" fill="url(#play)"/>
+</svg>

@@ -1,0 +1,31 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["@playwright/mcp@latest", "--save-video=1280x720"],
+      "env": {}
+    },
+    "remotion-documentation": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["@remotion/mcp@latest"],
+      "env": {}
+    },
+    "elevenlabs": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["elevenlabs-mcp"],
+      "env": {
+        "ELEVENLABS_API_KEY": ""
+      }
+    },
+    "replicate": {
+      "type": "sse",
+      "url": "https://mcp.replicate.com/sse",
+      "env": {
+        "REPLICATE_API_TOKEN": ""
+      }
+    }
+  }
+}
