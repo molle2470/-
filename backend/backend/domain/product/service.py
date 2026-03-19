@@ -184,6 +184,10 @@ class ProductService:
             last_crawled_at=datetime.now(tz=timezone.utc),
         )
 
+    async def get_product(self, product_id: int) -> Optional[Product]:
+        """상품 단건 조회"""
+        return await self.repo.get_async(product_id)
+
     async def list_products(
         self,
         source_id: Optional[int] = None,

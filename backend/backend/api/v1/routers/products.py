@@ -53,7 +53,7 @@ async def get_product(
 ):
     """상품 상세"""
     service = ProductService(session)
-    product = await service.repo.get_async(product_id)
+    product = await service.get_product(product_id)
     if not product:
         raise HTTPException(status_code=404, detail="상품을 찾을 수 없습니다")
     return {
