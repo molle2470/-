@@ -6,29 +6,24 @@ export function Popup() {
   const [monitoringCount, setMonitoringCount] = useState(0)
 
   useEffect(() => {
-    // 저장된 API 키 로드
-    chrome.storage.local.get(["apiKey"], (result) => {
-      if (result.apiKey) setApiKey(result.apiKey)
+    // apiKey + monitoringItems 한 번에 로드
+    chrome.storage.local.get(["apiKey", "monitoringItems"], (result) => {
+      const savedKey: string = result.apiKey || ""
+      if (savedKey) setApiKey(savedKey)
+      setMonitoringCount((result.monitoringItems || []).length)
+      // 로드한 키로 바로 서버 상태 확인
+      void checkServerStatus(savedKey)
     })
-
-    // 모니터링 수 로드
-    chrome.storage.local.get(["monitoringItems"], (result) => {
-      const items = result.monitoringItems || []
-      setMonitoringCount(items.length)
-    })
-
-    // 서버 상태 확인
-    void checkServerStatus()
   }, [])
 
-  async function checkServerStatus() {
+  // apiKey 파라미터를 받아 storage 재조회 없이 사용
+  async function checkServerStatus(key: string) {
     try {
-      const result = await chrome.storage.local.get("apiKey")
       const res = await fetch("http://localhost:28080/api/v1/extension/heartbeat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Extension-Key": result.apiKey || "",
+          "X-Extension-Key": key,
         },
         body: JSON.stringify({ monitoring_count: 0, extension_version: "1.0.0" }),
       })
@@ -38,52 +33,54 @@ export function Popup() {
     }
   }
 
-  function saveApiKey() {
-    chrome.storage.local.set({ apiKey })
-    void checkServerStatus()
+  async function saveApiKey() {
+    // 저장 완료 후 상태 확인 (경쟁 조건 방지)
+    await chrome.storage.local.set({ apiKey })
+    void checkServerStatus(apiKey)
   }
 
+  const statusColor =
+    serverStatus === "online" ? "#10b981"
+    : serverStatus === "offline" ? "#ef4444"
+    : "#f59e0b"
+
+  const statusText =
+    serverStatus === "online" ? "연결됨"
+    : serverStatus === "offline" ? "연결 끊김"
+    : "확인 중..."
+
   return (
-    <div style={{ width: 320, padding: 16, fontFamily: "sans-serif" }}>
-      <h2 style={{ fontSize: 16, marginBottom: 12 }}>소싱 어시스턴트</h2>
+    <div className="w-80 p-4 font-sans">
+      <h2 className="text-base font-semibold mb-3">소싱 어시스턴트</h2>
 
       {/* 서버 상태 */}
-      <div style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
-        <span style={{
-          width: 8, height: 8, borderRadius: "50%",
-          background: serverStatus === "online" ? "#10b981"
-            : serverStatus === "offline" ? "#ef4444" : "#f59e0b",
-        }} />
-        <span style={{ fontSize: 13 }}>
-          서버: {serverStatus === "online" ? "연결됨" : serverStatus === "offline" ? "연결 끊김" : "확인 중..."}
-        </span>
+      <div className="flex items-center gap-2 mb-3">
+        <span
+          className="w-2 h-2 rounded-full"
+          style={{ background: statusColor }}
+        />
+        <span className="text-sm">서버: {statusText}</span>
       </div>
 
       {/* 모니터링 현황 */}
-      <div style={{ marginBottom: 16, fontSize: 13, color: "#6b7280" }}>
+      <div className="mb-4 text-sm text-gray-500">
         모니터링 중: {monitoringCount}개 상품
       </div>
 
       {/* API 키 설정 */}
       <div>
-        <label style={{ fontSize: 12, color: "#6b7280" }}>API 키</label>
-        <div style={{ display: "flex", gap: 4, marginTop: 4 }}>
+        <label className="text-xs text-gray-500">API 키</label>
+        <div className="flex gap-1 mt-1">
           <input
             type="password"
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
             placeholder="API 키 입력"
-            style={{
-              flex: 1, padding: "6px 8px", border: "1px solid #d1d5db",
-              borderRadius: 4, fontSize: 13,
-            }}
+            className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm"
           />
           <button
-            onClick={saveApiKey}
-            style={{
-              padding: "6px 12px", background: "#2563eb", color: "white",
-              border: "none", borderRadius: 4, fontSize: 12, cursor: "pointer",
-            }}
+            onClick={() => void saveApiKey()}
+            className="px-3 py-1.5 bg-blue-600 text-white rounded text-xs cursor-pointer hover:bg-blue-700"
           >
             저장
           </button>
