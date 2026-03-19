@@ -166,10 +166,10 @@ class ProductService:
         # 브랜드 조회 (brand_name → brand_id)
         brand_repo = BrandRepository(self.session)
         brand = await brand_repo.find_by_name(data.brand_name)
-        brand_id = brand.id if brand else 0  # 미등록 브랜드는 0 (나중에 매핑)
+        brand_id = brand.id if brand else None  # 미등록 브랜드는 NULL (나중에 매핑)
 
-        # 상품 생성 (Product 모델에 있는 필드만 설정)
-        product_kwargs = dict(
+        # 상품 생성 (Product 모델에 있는 필드만 설정, repo.create_async 패턴 사용)
+        return await self.repo.create_async(
             source_id=source_id,
             brand_id=brand_id,
             name=data.name,
@@ -183,11 +183,6 @@ class ProductService:
             point_earnable=data.point_earnable,
             last_crawled_at=datetime.now(tz=timezone.utc),
         )
-        product = Product(**product_kwargs)
-        self.session.add(product)
-        await self.session.commit()
-        await self.session.refresh(product)
-        return product
 
     async def list_products(
         self,

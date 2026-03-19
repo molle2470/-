@@ -148,7 +148,7 @@ class CollectionService:
         수집된 상품 데이터 처리 (DB 저장 + 브랜드 IP 체크 + 가격 계산 + 로그).
 
         Returns:
-            {"product": Product, "ip_warning": str | None}
+            {"product": Product, "selling_price": int | None, "ip_warning": str | None}
         """
         # 1. 브랜드 지재권 확인 (경고만, 수집은 허용)
         ip_warning = None
@@ -165,6 +165,7 @@ class CollectionService:
         )
 
         # 3. PriceCalculator로 판매가 계산 (Phase 1: 기본 계산만)
+        selling_price = None
         try:
             selling_price = self.price_calculator.calculate(
                 original_price=product_data.original_price,
@@ -172,6 +173,9 @@ class CollectionService:
                 margin_rate=0.20,  # TODO: MarketTemplate에서 조회
             )
             logger.info(f"판매가 계산: {product_data.original_price}원 → {selling_price}원")
+            # TODO: selling_price 저장 — Task 5 DB 마이그레이션 후 활성화
+            # (Product 모델에 selling_price 필드 추가 후 아래 코드 활성화)
+            # await self.product_service.repo.update_async(product.id, selling_price=selling_price)
         except ValueError as e:
             logger.warning(f"판매가 계산 실패: {e}")
 
@@ -182,6 +186,9 @@ class CollectionService:
             product_name=product_data.name,
         )
         logger.info(f"SEO 태그 생성: {tags[:5]}...")
+        # TODO: seo_tags 저장 — Task 5 DB 마이그레이션 후 활성화
+        # (Product 모델에 seo_tags 필드 추가 후 아래 코드 활성화)
+        # await self.product_service.repo.update_async(product.id, seo_tags=tags)
 
         # 5. 수집 로그 기록
         log_message = ip_warning if ip_warning else None
@@ -192,7 +199,7 @@ class CollectionService:
             message=log_message,
         )
 
-        return {"product": product, "ip_warning": ip_warning}
+        return {"product": product, "selling_price": selling_price, "ip_warning": ip_warning}
 
     async def list_logs(
         self, limit: int = 50, skip: int = 0,

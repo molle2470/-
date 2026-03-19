@@ -39,7 +39,7 @@ class Product(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     source_id: int = Field(foreign_key="sources.id", nullable=False)
-    brand_id: int = Field(foreign_key="brands.id", nullable=False)
+    brand_id: Optional[int] = Field(default=None, foreign_key="brands.id", nullable=True)
     name: str = Field(sa_column=Column(String(500), nullable=False))
     original_price: int = Field(sa_column=Column(Integer, nullable=False))  # 원가 (원)
     thumbnail_url: Optional[str] = Field(default=None, sa_column=Column(String(1000)))
