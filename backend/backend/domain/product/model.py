@@ -1,8 +1,17 @@
+"""
+상품(Product) 도메인 SQLModel 모델.
+
+Table Structure:
+- Product: 소싱처에서 수집한 상품 마스터 테이블
+- ProductOptionGroup: 상품 옵션 그룹 (색상, 사이즈 등)
+- ProductOptionValue: 옵션 그룹의 값 (블랙, M 등)
+- ProductVariant: 옵션 조합별 재고/추가가격
+"""
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Optional, List
+from typing import Optional
 from sqlmodel import SQLModel, Field, JSON
-from sqlalchemy import Column, String, Integer, Boolean, DateTime, Text, Numeric, func, UniqueConstraint
+from sqlalchemy import Column, String, Integer, DateTime, Text, func, UniqueConstraint
 
 
 class ProductStatusEnum(str, Enum):
@@ -39,9 +48,18 @@ class Product(SQLModel, table=True):
     source_product_id: str = Field(sa_column=Column(String(200), nullable=False))  # 소싱처 고유 ID
     source_category: Optional[str] = Field(default=None, sa_column=Column(String(500)))  # 소싱처 원본 카테고리
     mapped_category: Optional[str] = Field(default=None, sa_column=Column(String(500)))  # 매핑된 마켓 카테고리
-    stock_status: StockStatusEnum = Field(default=StockStatusEnum.IN_STOCK)
-    monitoring_grade: MonitoringGradeEnum = Field(default=MonitoringGradeEnum.NORMAL)
-    status: ProductStatusEnum = Field(default=ProductStatusEnum.COLLECTED)
+    stock_status: StockStatusEnum = Field(
+        default=StockStatusEnum.IN_STOCK,
+        sa_column=Column(Text, nullable=False),
+    )
+    monitoring_grade: MonitoringGradeEnum = Field(
+        default=MonitoringGradeEnum.NORMAL,
+        sa_column=Column(Text, nullable=False),
+    )
+    status: ProductStatusEnum = Field(
+        default=ProductStatusEnum.COLLECTED,
+        sa_column=Column(Text, nullable=False),
+    )
     last_crawled_at: Optional[datetime] = Field(
         default=None, sa_column=Column(DateTime(timezone=True))
     )
@@ -88,7 +106,10 @@ class ProductVariant(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     product_id: int = Field(foreign_key="products.id", nullable=False)
     option_combination: Optional[dict] = Field(default=None, sa_column=Column(JSON))  # {"색상": "블랙", "사이즈": "M"}
-    stock_status: StockStatusEnum = Field(default=StockStatusEnum.IN_STOCK)
+    stock_status: StockStatusEnum = Field(
+        default=StockStatusEnum.IN_STOCK,
+        sa_column=Column(Text, nullable=False),
+    )
     additional_price: int = Field(default=0)  # 추가 가격
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(tz=timezone.utc),
