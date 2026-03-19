@@ -116,3 +116,7 @@ class ExtensionCommand(SQLModel, table=True):
         default=None,
         sa_column=Column(DateTime(timezone=True), nullable=True),
     )
+    message: Optional[str] = Field(
+        default=None,
+        sa_column=Column(Text, nullable=True),
+    )

@@ -88,6 +88,7 @@ class ExtensionCommandService:
             command_id,
             status=new_status,
             processed_at=datetime.now(tz=timezone.utc),
+            message=message,  # 처리 결과 메시지 (실패 사유 등)
         )
 
 

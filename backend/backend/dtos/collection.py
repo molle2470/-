@@ -1,4 +1,5 @@
 """수집 설정 DTO."""
+from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, Field
 
@@ -30,10 +31,10 @@ class CollectionSettingResponse(BaseModel):
     category_url: str
     max_count: int
     is_active: bool
-    last_collected_at: Optional[str] = None
+    last_collected_at: Optional[datetime] = None  # str → Optional[datetime] (ORM 직렬화 오류 방지)
     collected_count: int
-    created_at: str
-    updated_at: str
+    created_at: datetime  # str → datetime
+    updated_at: datetime  # str → datetime
 
     class Config:
         from_attributes = True
