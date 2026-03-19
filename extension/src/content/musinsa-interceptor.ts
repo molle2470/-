@@ -9,6 +9,9 @@
 
 import type { ProductData } from "../shared/types"
 
+// 페이지 origin (postMessage 대상 명시적 지정용)
+const pageOrigin = window.location.origin
+
 // 페이지 컨텍스트에 주입할 스크립트 (isolated world → main world 우회)
 const injectedScript = `
 (function() {
@@ -27,7 +30,7 @@ const injectedScript = `
           type: "MUSINSA_API_RESPONSE",
           url: url,
           data: data,
-        }, "*");
+        }, "${pageOrigin}");
       } catch(e) { /* 파싱 실패 무시 */ }
     }
 
@@ -45,6 +48,7 @@ script.remove()
 // 주입된 스크립트에서 보내는 메시지 수신
 window.addEventListener("message", (event) => {
   if (event.source !== window) return
+  if (event.origin !== pageOrigin) return
   if (event.data?.type !== "MUSINSA_API_RESPONSE") return
 
   const { data } = event.data
@@ -56,6 +60,8 @@ window.addEventListener("message", (event) => {
     chrome.runtime.sendMessage({
       type: "PRODUCT_DATA_CAPTURED",
       data: productData,
+    }).catch(() => {
+      // Background SW 비활성 시 무시
     })
   }
 })
@@ -64,7 +70,7 @@ window.addEventListener("message", (event) => {
 function parseMusinsaProduct(apiData: Record<string, unknown>): ProductData | null {
   try {
     // 무신사 API 응답 구조에 맞게 파싱 (실제 API 분석 후 조정 필요)
-    const data = (apiData as Record<string, unknown>).data as Record<string, unknown> | undefined
+    const data = apiData.data as Record<string, unknown> | undefined
     if (!data) return null
 
     const goodsNo = data.goodsNo || data.goodsNumber
@@ -84,7 +90,9 @@ function parseMusinsaProduct(apiData: Record<string, unknown>): ProductData | nu
       point_usable: benefitInfo.pointUsable !== false,
       point_earnable: benefitInfo.pointEarnable !== false,
       thumbnail_url: String(data.thumbnailImageUrl || data.goodsImage || "") || null,
-      image_urls: (Array.isArray(data.imageUrls) ? data.imageUrls : []) as string[],
+      image_urls: Array.isArray(data.imageUrls)
+        ? data.imageUrls.filter((item): item is string => typeof item === "string")
+        : [],
       options: [], // Phase 2에서 옵션 파싱 추가
     }
   } catch {
