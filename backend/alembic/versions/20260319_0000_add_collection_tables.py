@@ -99,8 +99,11 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    # Product.brand_id를 다시 non-nullable로 되돌림
-    op.alter_column("products", "brand_id", nullable=False)
+    # Product.brand_id를 다시 non-nullable로 되돌림 (products 테이블이 있을 때만 실행)
+    bind = op.get_bind()
+    inspector = inspect(bind)
+    if "products" in inspector.get_table_names():
+        op.alter_column("products", "brand_id", nullable=False)
 
     # extension_commands 테이블 삭제
     op.drop_index("ix_extension_commands_status", table_name="extension_commands")

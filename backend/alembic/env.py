@@ -39,6 +39,9 @@ def _get_db_url() -> str:
         f"postgresql://{settings.write_db_user}:{settings.write_db_password}"
         f"@{settings.write_db_host}:{settings.write_db_port}/{settings.write_db_name}"
     )
+    # SSL 설정 추가
+    if getattr(settings, 'use_db_ssl', False):
+        url += "?sslmode=require"
     return url
 
 
