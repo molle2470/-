@@ -1,5 +1,5 @@
 import type { MonitoringGrade, MonitoringItem, ProductData } from "../shared/types"
-import { MONITOR_ALARM_PREFIX } from "../shared/constants"
+import { MONITOR_ALARM_PREFIX, TAB_CLEANUP_PREFIX } from "../shared/constants"
 import { sendProductChange } from "./api-client"
 
 const MONITORING_STORAGE_KEY = "monitoringItems"
@@ -70,7 +70,7 @@ export async function handleMonitoringAlarm(alarmName: string): Promise<void> {
   // Content Script가 데이터를 캡처하면 메시지로 받음
   // 일회성 알람으로 0.5분 후 탭 닫기 (setTimeout 대신 chrome.alarms 사용)
   if (tab.id) {
-    chrome.alarms.create(`tab_cleanup_${tab.id}`, { delayInMinutes: 0.5 })
+    chrome.alarms.create(`${TAB_CLEANUP_PREFIX}${tab.id}`, { delayInMinutes: 0.5 })
   }
 }
 
