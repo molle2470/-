@@ -1,7 +1,7 @@
 """
 상품(Product) 도메인 Repository.
 """
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -43,7 +43,7 @@ class ProductRepository(BaseRepository[Product]):
         limit: int = 20,
     ) -> List[Product]:
         """필터 기반 상품 목록 조회"""
-        filters: dict = {}
+        filters: Dict[str, Any] = {}
         if source_id is not None:
             filters["source_id"] = source_id
         if brand_id is not None:
