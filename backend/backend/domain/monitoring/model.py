@@ -57,6 +57,8 @@ class PriceStockHistory(SQLModel, table=True):
     )
 
 
+# DEPRECATED: ExtensionCommand로 대체됨 (2026-03-19)
+# Phase 1 마이그레이션 완료 후 삭제 예정
 class CrawlJob(SQLModel, table=True):
     """크롤링 작업"""
     __tablename__ = "crawl_jobs"
