@@ -8,7 +8,8 @@ from typing import List
 from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.db.orm import get_write_session_dependency
+from backend.core.config import settings
+from backend.db.orm import get_read_session_dependency, get_write_session_dependency
 from backend.domain.collection.service import (
     CollectionService,
     ExtensionCommandService,
@@ -22,13 +23,10 @@ from backend.dtos.extension import (
 
 router = APIRouter(prefix="/extension", tags=["extension"])
 
-# Phase 1: 간단한 API 키 검증 (TODO: settings에서 읽기)
-EXTENSION_API_KEY = "sourcing-extension-phase1-key"
-
 
 def verify_extension_key(x_extension_key: str = Header(...)) -> str:
     """익스텐션 API 키 검증"""
-    if x_extension_key != EXTENSION_API_KEY:
+    if x_extension_key != settings.extension_api_key:
         raise HTTPException(status_code=401, detail="유효하지 않은 익스텐션 키")
     return x_extension_key
 
@@ -36,7 +34,7 @@ def verify_extension_key(x_extension_key: str = Header(...)) -> str:
 @router.get("/commands")
 async def get_pending_commands(
     _key: str = Depends(verify_extension_key),
-    session: AsyncSession = Depends(get_write_session_dependency),
+    session: AsyncSession = Depends(get_read_session_dependency),
 ) -> List[dict]:
     """대기 중인 명령 조회 (익스텐션 폴링)"""
     service = ExtensionCommandService(session)
@@ -96,35 +94,15 @@ async def receive_product_changes(
     product_id: int,
     data: ProductChangeRequest,
     _key: str = Depends(verify_extension_key),
-    session: AsyncSession = Depends(get_write_session_dependency),
 ) -> dict:
-    """모니터링 변동 데이터 수신"""
-    from backend.services.market_sync import MarketSyncService
-    from backend.adapters.naver_adapter import NaverAdapter
+    """모니터링 변동 데이터 수신 — Phase 2에서 구현 예정
 
-    adapter = NaverAdapter()
-    sync = MarketSyncService(session, adapter)
-
-    updated: List[dict] = []
-    if data.change_type in ("price", "both") and data.new_price:
-        # TODO: MarketTemplate에서 commission_rate, margin_rate 조회
-        result = await sync.sync_price_change(
-            product_id=product_id,
-            new_price=data.new_price,
-            commission_rate=0.05,
-            margin_rate=0.20,
-        )
-        updated.extend(result)
-
-    if data.change_type in ("stock", "both") and data.stock_status:
-        in_stock = data.stock_status == "in_stock"
-        result = await sync.sync_stock_change(
-            product_id=product_id,
-            in_stock=in_stock,
-        )
-        updated.extend(result)
-
-    return {"status": "ok", "updated_listings": updated}
+    TODO: Phase 2에서 NaverAdapter 연동 구현
+    - settings에서 naver_client_id, naver_client_secret, naver_channel_id 읽기
+    - NaverAdapter(client_id=..., client_secret=..., channel_id=...) 생성
+    - MarketSyncService로 가격/재고 동기화 처리
+    """
+    return {"status": "ok", "updated_listings": []}
 
 
 @router.post("/heartbeat")

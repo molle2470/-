@@ -57,6 +57,12 @@ class BackendSettings(BaseSettings):
     """Enable mock authentication for development."""
 
     # ===========================================
+    # Extension API Configuration
+    # ===========================================
+    extension_api_key: str = "sourcing-extension-phase1-key"
+    """익스텐션 통신용 API 키 (Phase 1 기본값, 운영환경에서는 환경변수로 덮어쓸 것)"""
+
+    # ===========================================
     # CORS Configuration
     # ===========================================
     @computed_field
