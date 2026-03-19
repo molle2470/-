@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Optional
 from sqlmodel import SQLModel, Field, JSON
-from sqlalchemy import Column, String, Integer, Boolean, DateTime, Text, func
+from sqlalchemy import Column, String, Integer, Float, Boolean, DateTime, Text, func
 
 
 class ClearanceTypeEnum(str, Enum):
@@ -95,7 +95,7 @@ class CommonTemplate(SQLModel, table=True):
     courier: Optional[str] = Field(default=None, sa_column=Column(String(100)))               # 택배사
     as_phone: Optional[str] = Field(default=None, sa_column=Column(String(20)))               # A/S 전화번호
     as_description: Optional[str] = Field(default=None, sa_column=Column(Text))               # A/S 안내문구
-    origin_country: str = Field(default="기타", sa_column=Column(String(50), nullable=False, server_default="기타"))  # 원산지
+    origin_country: str = Field(default="기타", sa_column=Column(String(50), nullable=False))  # 원산지 (server_default 제거 - 한글 인코딩 위험)
     kc_cert_info: Optional[str] = Field(default=None, sa_column=Column(String(200)))          # KC인증 정보
     updated_at: datetime = Field(
         default_factory=lambda: datetime.now(tz=timezone.utc),
@@ -110,14 +110,38 @@ class MarketTemplate(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     market_id: int = Field(foreign_key="markets.id", nullable=False)
     common_template_id: int = Field(foreign_key="common_templates.id", nullable=False)
-    commission_rate: float = Field(default=0.0)    # 마켓수수료 (예: 0.08 = 8%)
-    margin_rate: float = Field(default=0.0)        # 마진율 (예: 0.20 = 20%)
-    shipping_fee: int = Field(default=0)           # 배송비
-    jeju_extra_fee: int = Field(default=5000)      # 제주 추가 배송비
-    island_extra_fee: int = Field(default=5000)    # 도서산간 추가 배송비
-    return_fee: int = Field(default=5000)          # 반품 배송비
-    product_name_max_length: int = Field(default=100)  # 상품명 길이 제한
-    discount_rate: float = Field(default=0.0)      # 할인율
+    commission_rate: float = Field(
+        default=0.0,
+        sa_column=Column(Float, nullable=False, server_default="0.0"),
+    )  # 마켓수수료 (예: 0.08 = 8%)
+    margin_rate: float = Field(
+        default=0.0,
+        sa_column=Column(Float, nullable=False, server_default="0.0"),
+    )  # 마진율 (예: 0.20 = 20%)
+    shipping_fee: int = Field(
+        default=0,
+        sa_column=Column(Integer, nullable=False, server_default="0"),
+    )  # 배송비
+    jeju_extra_fee: int = Field(
+        default=5000,
+        sa_column=Column(Integer, nullable=False, server_default="5000"),
+    )  # 제주 추가 배송비
+    island_extra_fee: int = Field(
+        default=5000,
+        sa_column=Column(Integer, nullable=False, server_default="5000"),
+    )  # 도서산간 추가 배송비
+    return_fee: int = Field(
+        default=5000,
+        sa_column=Column(Integer, nullable=False, server_default="5000"),
+    )  # 반품 배송비
+    product_name_max_length: int = Field(
+        default=100,
+        sa_column=Column(Integer, nullable=False, server_default="100"),
+    )  # 상품명 길이 제한
+    discount_rate: float = Field(
+        default=0.0,
+        sa_column=Column(Float, nullable=False, server_default="0.0"),
+    )  # 할인율
     market_specific_config: Optional[dict] = Field(default=None, sa_column=Column(JSON))
     product_info_notice_template: Optional[dict] = Field(default=None, sa_column=Column(JSON))
     # 공통 템플릿 오버라이드 필드 (NULL이면 공통값 사용)
@@ -156,6 +180,7 @@ class CoupangBrandClearance(SQLModel, table=True):
     brand_id: int = Field(foreign_key="brands.id", nullable=False)
     market_account_id: int = Field(foreign_key="market_accounts.id", nullable=False)
     clearance_type: ClearanceTypeEnum = Field(
+        ...,  # 필수 필드 (지재권 또는 가품의심 - 반드시 명시해야 함)
         sa_column=Column(Text, nullable=False),
     )
     clearance_status: ClearanceStatusEnum = Field(
