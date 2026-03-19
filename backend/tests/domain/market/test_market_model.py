@@ -64,3 +64,15 @@ def test_listing_status_enum():
     assert ListingStatusEnum.REGISTERED == "registered"
     assert ListingStatusEnum.FAILED == "failed"
     assert ListingStatusEnum.DEACTIVATED == "deactivated"
+
+
+def test_clearance_type_enum():
+    assert ClearanceTypeEnum.IP_RIGHT == "ip_right"
+    assert ClearanceTypeEnum.COUNTERFEIT == "counterfeit"
+
+
+def test_seo_rule_model():
+    sr = SeoRule(market_id=1)
+    assert sr.market_id == 1
+    assert sr.tag_pattern is None
+    assert sr.title_pattern is None
