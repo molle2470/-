@@ -27,13 +27,16 @@ export interface ExtensionCommand {
   payload: string
 }
 
+export type MonitoringGrade = "high" | "normal"
+
 /** 모니터링 대상 */
 export interface MonitoringItem {
   product_id: number
   source_url: string
-  grade: string
+  grade: MonitoringGrade
   last_price: number
   last_stock_status: string
+  is_initialized: boolean
 }
 
 /** Content Script → Background 메시지 */

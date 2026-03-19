@@ -18,10 +18,14 @@ async function getHeaders(): Promise<HeadersInit> {
 
 /** 대기 중인 명령 조회 */
 export async function fetchPendingCommands(): Promise<ExtensionCommand[]> {
-  const headers = await getHeaders()
-  const res = await fetch(`${API_BASE_URL}/extension/commands`, { headers })
-  if (!res.ok) return []
-  return res.json()
+  try {
+    const headers = await getHeaders()
+    const res = await fetch(`${API_BASE_URL}/extension/commands`, { headers })
+    if (!res.ok) return []
+    return res.json()
+  } catch {
+    return []
+  }
 }
 
 /** 명령 처리 완료 보고 */
@@ -29,12 +33,16 @@ export async function ackCommand(
   commandId: number,
   status: "done" | "failed" = "done",
 ): Promise<void> {
-  const headers = await getHeaders()
-  await fetch(`${API_BASE_URL}/extension/commands/${commandId}/ack`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({ status }),
-  })
+  try {
+    const headers = await getHeaders()
+    await fetch(`${API_BASE_URL}/extension/commands/${commandId}/ack`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ status }),
+    })
+  } catch {
+    // 네트워크 오류 시 무시 (재시도 없음)
+  }
 }
 
 /** 수집 상품 전송 */
@@ -42,14 +50,18 @@ export async function sendCollectedProduct(
   source: string,
   product: ProductData,
 ): Promise<{ product_id: number; warning?: string } | null> {
-  const headers = await getHeaders()
-  const res = await fetch(`${API_BASE_URL}/extension/products`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({ source, product }),
-  })
-  if (!res.ok) return null
-  return res.json()
+  try {
+    const headers = await getHeaders()
+    const res = await fetch(`${API_BASE_URL}/extension/products`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ source, product }),
+    })
+    if (!res.ok) return null
+    return res.json()
+  } catch {
+    return null
+  }
 }
 
 /** 모니터링 변동 전송 */
@@ -60,17 +72,21 @@ export async function sendProductChange(
   newPrice: number | null,
   stockStatus: string | null,
 ): Promise<void> {
-  const headers = await getHeaders()
-  await fetch(`${API_BASE_URL}/extension/products/${productId}/changes`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      change_type: changeType,
-      old_price: oldPrice,
-      new_price: newPrice,
-      stock_status: stockStatus,
-    }),
-  })
+  try {
+    const headers = await getHeaders()
+    await fetch(`${API_BASE_URL}/extension/products/${productId}/changes`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        change_type: changeType,
+        old_price: oldPrice,
+        new_price: newPrice,
+        stock_status: stockStatus,
+      }),
+    })
+  } catch {
+    // 네트워크 오류 시 무시
+  }
 }
 
 /** Heartbeat 전송 */

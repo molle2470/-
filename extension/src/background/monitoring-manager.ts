@@ -1,8 +1,8 @@
-import type { MonitoringItem, ProductData } from "../shared/types"
+import type { MonitoringGrade, MonitoringItem, ProductData } from "../shared/types"
+import { MONITOR_ALARM_PREFIX } from "../shared/constants"
 import { sendProductChange } from "./api-client"
 
 const MONITORING_STORAGE_KEY = "monitoringItems"
-const MONITOR_ALARM_PREFIX = "monitor_"
 
 /** 모니터링 목록 로드 (chrome.storage.local) */
 async function loadMonitoringItems(): Promise<MonitoringItem[]> {
@@ -19,7 +19,7 @@ async function saveMonitoringItems(items: MonitoringItem[]): Promise<void> {
 export async function registerMonitoring(
   productId: number,
   sourceUrl: string,
-  grade: string,
+  grade: MonitoringGrade,
 ): Promise<void> {
   const items = await loadMonitoringItems()
 
@@ -32,6 +32,7 @@ export async function registerMonitoring(
     grade,
     last_price: 0,
     last_stock_status: "unknown",
+    is_initialized: false,
   })
   await saveMonitoringItems(items)
 
@@ -80,11 +81,12 @@ export async function checkProductChanges(
 ): Promise<void> {
   const items = await loadMonitoringItems()
   const item = items.find((i) => i.product_id === productId)
-  if (!item || item.last_price === 0) {
-    // 최초 데이터 → 저장만
+  if (!item || !item.is_initialized) {
+    // 최초 데이터 → 저장만 (변동 전송 없음)
     if (item) {
       item.last_price = newData.original_price
       item.last_stock_status = newData.stock_status
+      item.is_initialized = true
       await saveMonitoringItems(items)
     }
     return
@@ -114,7 +116,7 @@ export async function checkProductChanges(
 }
 
 /** 등급별 랜덤 주기 (분) — chrome.alarms 최소 1분 */
-function getRandomInterval(grade: string): number {
+function getRandomInterval(grade: MonitoringGrade): number {
   if (grade === "high") {
     // 8~17분
     return 8 + Math.random() * 9

@@ -1,3 +1,5 @@
 export const API_BASE_URL = "http://localhost:28080/api/v1"
 export const HEARTBEAT_ALARM_NAME = "heartbeat"
 export const COMMAND_POLL_ALARM_NAME = "command-poll"
+export const MONITOR_ALARM_PREFIX = "monitor_"
+export const TAB_CLEANUP_PREFIX = "tab_cleanup_"

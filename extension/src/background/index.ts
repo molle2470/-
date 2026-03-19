@@ -1,4 +1,9 @@
-import { COMMAND_POLL_ALARM_NAME, HEARTBEAT_ALARM_NAME } from "../shared/constants"
+import {
+  COMMAND_POLL_ALARM_NAME,
+  HEARTBEAT_ALARM_NAME,
+  MONITOR_ALARM_PREFIX,
+  TAB_CLEANUP_PREFIX,
+} from "../shared/constants"
 import { sendHeartbeat, sendCollectedProduct } from "./api-client"
 import { startCommandPolling, handleCommandPoll } from "./command-poller"
 import {
@@ -7,9 +12,6 @@ import {
   getMonitoringCount,
 } from "./monitoring-manager"
 import type { ContentMessage } from "../shared/types"
-
-const MONITOR_ALARM_PREFIX = "monitor_"
-const TAB_CLEANUP_PREFIX = "tab_cleanup_"
 
 // 알람 이벤트 핸들러
 chrome.alarms.onAlarm.addListener(async (alarm) => {
@@ -56,6 +58,8 @@ chrome.runtime.onMessage.addListener((message: ContentMessage, sender, sendRespo
       chrome.tabs.sendMessage(sender.tab.id, {
         type: "PRODUCT_DATA_READY",
         data: message.data,
+      }).catch(() => {
+        // content script가 아직 준비되지 않은 경우 무시
       })
     }
     sendResponse({ success: true })
@@ -63,11 +67,14 @@ chrome.runtime.onMessage.addListener((message: ContentMessage, sender, sendRespo
 })
 
 // 익스텐션 설치/업데이트 시 초기화
-chrome.runtime.onInstalled.addListener(() => {
-  startCommandPolling()
+chrome.runtime.onInstalled.addListener(async () => {
+  await startCommandPolling()
 
-  // Heartbeat 알람 (1분마다)
-  chrome.alarms.create(HEARTBEAT_ALARM_NAME, { periodInMinutes: 1 })
+  // Heartbeat 알람 (중복 생성 방지)
+  const existingHeartbeat = await chrome.alarms.get(HEARTBEAT_ALARM_NAME)
+  if (!existingHeartbeat) {
+    chrome.alarms.create(HEARTBEAT_ALARM_NAME, { periodInMinutes: 1 })
+  }
 
   console.log("소싱 어시스턴트 익스텐션 초기화 완료")
 })
