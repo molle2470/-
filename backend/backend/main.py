@@ -5,7 +5,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.core.config import settings
 from backend.api.v1.routers.auth import router as auth_router
+from backend.api.v1.routers.collection_logs import router as collection_logs_router
+from backend.api.v1.routers.collection_settings import router as collection_settings_router
 from backend.api.v1.routers.extension import router as extension_router
+from backend.api.v1.routers.products import router as products_router
 from backend.api.v1.routers.user import router as user_router
 from backend.middleware.error_handler import register_exception_handlers
 
@@ -75,6 +78,9 @@ def create_application() -> FastAPI:
     app.include_router(auth_router, prefix="/api/v1")
     app.include_router(user_router, prefix="/api/v1")
     app.include_router(extension_router, prefix="/api/v1")
+    app.include_router(collection_settings_router, prefix="/api/v1")
+    app.include_router(collection_logs_router, prefix="/api/v1")
+    app.include_router(products_router, prefix="/api/v1")
 
     @app.get("/")
     async def root() -> dict[str, str]:
