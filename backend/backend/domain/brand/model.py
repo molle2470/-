@@ -4,7 +4,7 @@
 Table Structure:
 - Brand: 브랜드 마스터 테이블 (지재권 승인 여부 포함)
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from sqlmodel import SQLModel, Field
@@ -21,13 +21,13 @@ class Brand(SQLModel, table=True):
     # 지재권 승인 여부 (False: 취급 불가 브랜드)
     is_ip_approved: bool = Field(
         default=False,
-        sa_column=Column(Boolean, default=False)
+        sa_column=Column(Boolean, nullable=False, server_default="false")
     )
-    created_at: Optional[datetime] = Field(
-        default=None,
-        sa_column=Column(DateTime(timezone=True), server_default=func.now())
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(tz=timezone.utc),
+        sa_column=Column(DateTime(timezone=True), nullable=False),
     )
-    updated_at: Optional[datetime] = Field(
-        default=None,
-        sa_column=Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(tz=timezone.utc),
+        sa_column=Column(DateTime(timezone=True), nullable=False, onupdate=func.now()),
     )

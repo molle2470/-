@@ -5,7 +5,7 @@ Table Structure:
 - Source: 소싱처 마스터 테이블 (무신사, SSG 등)
 - SourceBrand: 소싱처별 브랜드 표기명 매핑 테이블
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from sqlmodel import SQLModel, Field
@@ -26,15 +26,15 @@ class Source(SQLModel, table=True):
     # 소싱처 활성화 여부
     is_active: bool = Field(
         default=True,
-        sa_column=Column(Boolean, default=True)
+        sa_column=Column(Boolean, nullable=False, server_default="true")
     )
-    created_at: Optional[datetime] = Field(
-        default=None,
-        sa_column=Column(DateTime(timezone=True), server_default=func.now())
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(tz=timezone.utc),
+        sa_column=Column(DateTime(timezone=True), nullable=False),
     )
-    updated_at: Optional[datetime] = Field(
-        default=None,
-        sa_column=Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(tz=timezone.utc),
+        sa_column=Column(DateTime(timezone=True), nullable=False, onupdate=func.now()),
     )
 
 
@@ -49,7 +49,11 @@ class SourceBrand(SQLModel, table=True):
     source_id: int = Field(foreign_key="sources.id", nullable=False)
     # 해당 소싱처 내에서의 브랜드 표기명 (예: NIKE, 나이키)
     display_name: str = Field(sa_column=Column(String(200), nullable=False))
-    created_at: Optional[datetime] = Field(
-        default=None,
-        sa_column=Column(DateTime(timezone=True), server_default=func.now())
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(tz=timezone.utc),
+        sa_column=Column(DateTime(timezone=True), nullable=False),
+    )
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(tz=timezone.utc),
+        sa_column=Column(DateTime(timezone=True), nullable=False, onupdate=func.now()),
     )

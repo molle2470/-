@@ -16,15 +16,20 @@ def test_source_model_exists():
     )
     assert source.name == "무신사"
     assert source.crawler_type == "musinsa"
+    assert source.is_active is True  # 기본값 검증
+    assert source.created_at is not None  # default_factory로 즉시 값 설정
 
 
 def test_brand_model_exists():
     """Brand 모델 인스턴스 생성 및 필드 검증"""
     brand = Brand(name="나이키")
     assert brand.name == "나이키"
+    assert brand.is_ip_approved is False  # 기본값 검증
 
 
 def test_source_brand_model_exists():
     """SourceBrand 모델 인스턴스 생성 및 필드 검증"""
     sb = SourceBrand(brand_id=1, source_id=1, display_name="NIKE")
     assert sb.display_name == "NIKE"
+    assert sb.created_at is not None  # default_factory로 즉시 값 설정
+    assert sb.updated_at is not None  # updated_at 필드 추가 검증
