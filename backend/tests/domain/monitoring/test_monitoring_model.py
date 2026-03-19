@@ -59,6 +59,8 @@ def test_crawl_job_status_enum():
 
 def test_notification_type_enum():
     assert NotificationTypeEnum.PRICE_CHANGE == "price_change"
+    assert NotificationTypeEnum.OUT_OF_STOCK == "out_of_stock"
+    assert NotificationTypeEnum.RESTOCKED == "restocked"
     assert NotificationTypeEnum.CRAWL_ERROR == "crawl_error"
     assert NotificationTypeEnum.MARKET_SYNC_ERROR == "market_sync_error"
 
