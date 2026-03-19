@@ -38,7 +38,7 @@ async def test_sync_price_change_updates_listings():
 
         assert len(updated) == 1
         assert updated[0] == "NAVER_123"
-        adapter.update_price.assert_called_once()
+        adapter.update_price.assert_called_once_with("NAVER_123", 120000)
 
 
 @pytest.mark.asyncio

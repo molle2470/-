@@ -9,10 +9,8 @@ from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.adapters.base_adapter import BaseMarketAdapter
+from backend.domain.market.model import ListingStatusEnum
 from backend.domain.market.repository import MarketListingRepository
-from backend.domain.market.service import MarketService
-from backend.domain.monitoring.service import MonitoringService
-from backend.domain.product.service import ProductService
 from backend.services.price_calculator import PriceCalculator
 
 
@@ -33,9 +31,6 @@ class MarketSyncService:
         self.session = session
         self.adapter = adapter
         self.listing_repo = MarketListingRepository(session)
-        self.product_service = ProductService(session)
-        self.market_service = MarketService(session)
-        self.monitoring_service = MonitoringService(session)
         self.price_calculator = PriceCalculator()
 
     async def sync_price_change(
@@ -101,6 +96,14 @@ class MarketSyncService:
             if listing.market_product_id:
                 success = await self.adapter.update_stock(listing.market_product_id, in_stock)
                 if success:
+                    # 로컬 DB 상태 동기화
+                    listing.listing_status = (
+                        ListingStatusEnum.REGISTERED if in_stock
+                        else ListingStatusEnum.DEACTIVATED
+                    )
                     updated.append(listing.market_product_id)
+
+        if updated:
+            await self.session.commit()
 
         return updated

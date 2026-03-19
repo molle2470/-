@@ -5,7 +5,6 @@
 
 참고: https://apicenter.commerce.naver.com/
 """
-import base64
 from typing import Dict, Optional
 
 import httpx
