@@ -1,35 +1,19 @@
 import { ExtensionStatus } from "@/components/sourcing/ExtensionStatus"
+import { serverFetchList } from "@/lib/server-fetch"
 import type { CollectionSetting, SourcingProduct, CollectionLog } from "@/types/sourcing"
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_ENV === "development"
-    ? (process.env.NEXT_PUBLIC_API_URL_DEV ?? "http://localhost:28080")
-    : (process.env.NEXT_PUBLIC_API_URL_PROD ?? "http://localhost:28080")
-
-/** 서버에서 API 데이터를 가져오는 헬퍼 */
-async function fetchJson<T>(path: string): Promise<T | null> {
-  try {
-    const res = await fetch(`${API_BASE_URL}${path}`, {
-      cache: "no-store",
-    })
-    if (!res.ok) return null
-    return (await res.json()) as T
-  } catch {
-    return null
-  }
-}
 
 /** 소싱 메인 대시보드 — 수집 현황 요약 */
 export default async function SourcingPage() {
   const [products, settings, logs] = await Promise.all([
-    fetchJson<SourcingProduct[]>("/api/v1/products?limit=1"),
-    fetchJson<CollectionSetting[]>("/api/v1/collection-settings"),
-    fetchJson<CollectionLog[]>("/api/v1/collection-logs?limit=5"),
+    // limit=200 (최대값)으로 전체 수 근사치 조회 — 별도 count 엔드포인트 없음
+    serverFetchList<SourcingProduct>("/api/v1/products?limit=200"),
+    serverFetchList<CollectionSetting>("/api/v1/collection-settings"),
+    serverFetchList<CollectionLog>("/api/v1/collection-logs?limit=5"),
   ])
 
-  const productCount = Array.isArray(products) ? products.length : 0
-  const settingsCount = Array.isArray(settings) ? settings.length : 0
-  const recentLogs = Array.isArray(logs) ? logs : []
+  const productCount = products.length
+  const settingsCount = settings.length
+  const recentLogs = logs
 
   return (
     <div>

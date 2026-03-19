@@ -1,27 +1,10 @@
 import { CollectionSettingsTable } from "@/components/sourcing/CollectionSettingsTable"
+import { serverFetchList } from "@/lib/server-fetch"
 import type { CollectionSetting } from "@/types/sourcing"
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_ENV === "development"
-    ? (process.env.NEXT_PUBLIC_API_URL_DEV ?? "http://localhost:28080")
-    : (process.env.NEXT_PUBLIC_API_URL_PROD ?? "http://localhost:28080")
-
-/** 서버에서 수집 설정 목록 조회 */
-async function fetchSettings(): Promise<CollectionSetting[]> {
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/v1/collection-settings`, {
-      cache: "no-store",
-    })
-    if (!res.ok) return []
-    return (await res.json()) as CollectionSetting[]
-  } catch {
-    return []
-  }
-}
 
 /** 수집 설정 목록 페이지 */
 export default async function CollectionSettingsPage() {
-  const settings = await fetchSettings()
+  const settings = await serverFetchList<CollectionSetting>("/api/v1/collection-settings")
 
   return (
     <div>

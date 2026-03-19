@@ -1,6 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
+import { useState } from "react"
 import Link from "next/link"
 import type { CollectionSetting } from "@/types/sourcing"
 import { collectionSettingsApi } from "@/lib/sourcing-api"
@@ -12,6 +13,8 @@ interface Props {
 /** 수집 설정 목록 테이블 */
 export function CollectionSettingsTable({ settings }: Props) {
   const router = useRouter()
+  /** 토글 중인 설정 ID (중복 클릭 방지) */
+  const [togglingId, setTogglingId] = useState<number | null>(null)
 
   /** 수집 설정 삭제 */
   async function handleDelete(id: number) {
@@ -26,6 +29,8 @@ export function CollectionSettingsTable({ settings }: Props) {
 
   /** is_active 토글 */
   async function handleToggleActive(setting: CollectionSetting) {
+    if (togglingId !== null) return
+    setTogglingId(setting.id)
     try {
       await collectionSettingsApi.update(setting.id, {
         is_active: !setting.is_active,
@@ -33,6 +38,8 @@ export function CollectionSettingsTable({ settings }: Props) {
       router.refresh()
     } catch {
       alert("상태 변경에 실패했습니다.")
+    } finally {
+      setTogglingId(null)
     }
   }
 
@@ -86,13 +93,14 @@ export function CollectionSettingsTable({ settings }: Props) {
                     {/* 활성/비활성 토글 버튼 */}
                     <button
                       onClick={() => handleToggleActive(setting)}
-                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors ${
+                      disabled={togglingId !== null}
+                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                         setting.is_active
                           ? "bg-green-100 text-green-700 hover:bg-green-200"
                           : "bg-gray-100 text-gray-500 hover:bg-gray-200"
                       }`}
                     >
-                      {setting.is_active ? "활성" : "비활성"}
+                      {togglingId === setting.id ? "처리중..." : setting.is_active ? "활성" : "비활성"}
                     </button>
                   </Td>
                   <Td>{setting.collected_count.toLocaleString()}</Td>

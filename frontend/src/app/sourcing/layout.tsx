@@ -1,3 +1,4 @@
+import type { ReactNode } from "react"
 import Link from "next/link"
 
 /** 소싱 섹션 사이드바 네비게이션 항목 */
@@ -14,7 +15,7 @@ const navItems = [
 export default function SourcingLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: ReactNode
 }) {
   return (
     <div className="flex min-h-screen bg-gray-50">
