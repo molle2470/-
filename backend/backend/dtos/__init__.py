@@ -1,35 +1,6 @@
-"""DTOs package."""
+"""DTOs package.
 
-from backend.dtos.auth import (
-    EmailLoginRequestDto,
-    EmailSignUpRequestDto,
-    LoginResponseDto,
-    RefreshTokenRequestDto,
-    RefreshTokenResponseDto,
-)
-from backend.dtos.user import (
-    UserCreateRequest,
-    UserUpdateRequest,
-    UserSearchRequest,
-    UserSummaryResponse,
-    UserResponse,
-    UserListResponse,
-    UserInfoDto,
-)
-
-__all__ = [
-    # Auth DTOs
-    "EmailLoginRequestDto",
-    "EmailSignUpRequestDto",
-    "LoginResponseDto",
-    "RefreshTokenRequestDto",
-    "RefreshTokenResponseDto",
-    # User DTOs
-    "UserCreateRequest",
-    "UserUpdateRequest",
-    "UserSearchRequest",
-    "UserSummaryResponse",
-    "UserResponse",
-    "UserListResponse",
-    "UserInfoDto",
-]
+순환 참조 방지를 위해 각 DTO는 직접 모듈 경로로 임포트하세요:
+  from backend.dtos.user import UserCreateRequest
+  from backend.dtos.extension import ExtensionProductData
+"""

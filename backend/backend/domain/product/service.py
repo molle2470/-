@@ -4,8 +4,13 @@
 크롤링 데이터 기반 상품 생성, 가격/재고 변동 감지, 상품 목록 조회 등
 상품 도메인 핵심 비즈니스 로직을 담당합니다.
 """
+from __future__ import annotations
+
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Tuple, TypedDict, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple, TypedDict, Union
+
+if TYPE_CHECKING:
+    from backend.dtos.extension import ExtensionProductData
 
 
 class CrawledProductData(TypedDict, total=False):
@@ -28,6 +33,7 @@ from backend.domain.product.model import (
     StockStatusEnum,
 )
 from backend.domain.product.repository import ProductRepository
+from backend.domain.brand.repository import BrandRepository
 
 
 class ProductService:
@@ -131,6 +137,57 @@ class ProductService:
             await self.session.refresh(product)
 
         return changes
+
+    async def create_from_extension(
+        self,
+        source: str,
+        data: "ExtensionProductData",
+        source_id: int,
+    ) -> Product:
+        """
+        익스텐션 수집 데이터에서 상품 생성 (중복 체크 + 브랜드 조회 포함).
+
+        Args:
+            source: 소싱처 식별자 (예: "musinsa")
+            data: 익스텐션에서 전송한 상품 데이터
+            source_id: 소싱처 ID
+
+        Returns:
+            생성되거나 기존에 존재하는 Product 객체
+        """
+        # 중복 체크
+        existing = await self.repo.find_by_source_product_id(
+            source_id=source_id,
+            source_product_id=data.source_product_id,
+        )
+        if existing is not None:
+            return existing
+
+        # 브랜드 조회 (brand_name → brand_id)
+        brand_repo = BrandRepository(self.session)
+        brand = await brand_repo.find_by_name(data.brand_name)
+        brand_id = brand.id if brand else 0  # 미등록 브랜드는 0 (나중에 매핑)
+
+        # 상품 생성 (Product 모델에 있는 필드만 설정)
+        product_kwargs = dict(
+            source_id=source_id,
+            brand_id=brand_id,
+            name=data.name,
+            original_price=data.original_price,
+            source_url=data.source_url,
+            source_product_id=data.source_product_id,
+            thumbnail_url=data.thumbnail_url,
+            image_urls=data.image_urls if data.image_urls else None,
+            grade_discount_available=data.grade_discount_available,
+            point_usable=data.point_usable,
+            point_earnable=data.point_earnable,
+            last_crawled_at=datetime.now(tz=timezone.utc),
+        )
+        product = Product(**product_kwargs)
+        self.session.add(product)
+        await self.session.commit()
+        await self.session.refresh(product)
+        return product
 
     async def list_products(
         self,
