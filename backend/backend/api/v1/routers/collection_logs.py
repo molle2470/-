@@ -1,4 +1,7 @@
-"""수집 로그 조회 + SSE 실시간 스트림."""
+"""수집 로그 조회 + SSE 실시간 스트림.
+
+GET 엔드포인트는 대시보드 읽기 허용 (인증 불필요).
+"""
 import json
 from typing import List
 
@@ -7,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.orm import get_read_session_dependency
 from backend.domain.collection.service import CollectionService
+from backend.domain.user.auth_service import get_user_id
 
 router = APIRouter(prefix="/collection-logs", tags=["collection-logs"])
 

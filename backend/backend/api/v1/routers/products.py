@@ -1,4 +1,7 @@
-"""상품 관리 API 라우터."""
+"""상품 관리 API 라우터.
+
+GET 엔드포인트는 대시보드 읽기 허용 (인증 불필요).
+"""
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -7,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.db.orm import get_read_session_dependency
 from backend.domain.product.model import ProductStatusEnum
 from backend.domain.product.service import ProductService
+from backend.domain.user.auth_service import get_user_id
 
 router = APIRouter(prefix="/products", tags=["products"])
 
@@ -20,9 +24,16 @@ async def list_products(
     limit: int = Query(default=50, ge=1, le=200),
     session: AsyncSession = Depends(get_read_session_dependency),
 ):
-    """수집된 상품 목록"""
+    """수집된 상품 목록 (대시보드 읽기 허용)"""
     service = ProductService(session)
-    status_enum = ProductStatusEnum(status) if status else None
+    # 잘못된 status 값은 500이 아닌 400으로 처리
+    try:
+        status_enum = ProductStatusEnum(status) if status else None
+    except ValueError:
+        raise HTTPException(
+            status_code=400,
+            detail=f"유효하지 않은 status 값: {status}",
+        )
     products = await service.list_products(
         source_id=source_id,
         brand_id=brand_id,
