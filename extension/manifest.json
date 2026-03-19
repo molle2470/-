@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "소싱 어시스턴트",
+  "version": "1.0.0",
+  "description": "무재고 구매대행 상품 수집 익스텐션",
+  "permissions": ["alarms", "storage", "notifications", "tabs"],
+  "host_permissions": [
+    "https://*.musinsa.com/*",
+    "https://api.musinsa.com/*",
+    "http://localhost:28080/*"
+  ],
+  "background": {
+    "service_worker": "src/background/index.ts",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.musinsa.com/app/goods/*"],
+      "js": ["src/content/musinsa-interceptor.ts"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["https://www.musinsa.com/app/goods/*"],
+      "js": ["src/content/musinsa-product.tsx"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "src/popup/index.html"
+  }
+}
