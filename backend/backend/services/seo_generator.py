@@ -45,10 +45,11 @@ class SeoGenerator:
         add_tag(brand)
         # 2. 카테고리
         add_tag(category)
-        # 3. 브랜드+카테고리 조합 태그
-        combo = f"{brand}{category}"
-        if len(combo) <= 20:
-            add_tag(combo)
+        # 3. 브랜드+카테고리 조합 태그 (max_tags 체크 포함)
+        if len(tags) < max_tags:
+            combo = f"{brand}{category}"
+            if len(combo) <= 20:
+                add_tag(combo)
         # 4. 상품명에서 키워드 추출 (공백/특수문자 기준 분리)
         words = re.split(r'[\s\-_/]+', product_name)
         for word in words:
