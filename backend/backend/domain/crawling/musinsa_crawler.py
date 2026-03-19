@@ -35,7 +35,7 @@ class MusinsaCrawler(BaseCrawler):
             "Referer": MUSINSA_WEB_BASE,
         }
 
-    async def _fetch_json(self, url: str, params: Optional[Dict] = None) -> Optional[Dict]:
+    async def _fetch_json(self, url: str, params: Optional[Dict[str, object]] = None) -> Optional[Dict[str, object]]:
         """JSON API 호출"""
         try:
             async with httpx.AsyncClient(timeout=15.0) as client:
@@ -95,7 +95,7 @@ class MusinsaCrawler(BaseCrawler):
         # TODO: 무신사 상품 상세 API 분석 후 구현
         return None
 
-    def _parse_product_from_api(self, item: Dict) -> Optional[CrawledProduct]:
+    def _parse_product_from_api(self, item: Dict[str, object]) -> Optional[CrawledProduct]:
         """
         무신사 API 응답에서 CrawledProduct 파싱.
 

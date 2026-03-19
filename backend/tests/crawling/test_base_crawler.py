@@ -1,6 +1,8 @@
 """
 BaseCrawler 단위 테스트.
 """
+from typing import List, Optional
+
 import pytest
 from backend.domain.crawling.base_crawler import (
     BaseCrawler, BrandInfo, CategoryInfo, CrawledProduct, USER_AGENTS
@@ -9,16 +11,22 @@ from backend.domain.crawling.base_crawler import (
 
 class ConcreteCrawler(BaseCrawler):
     """테스트용 구체 크롤러"""
-    async def scan_brands(self, category_url):
+    async def scan_brands(self, category_url: str) -> List[BrandInfo]:
         return [BrandInfo(name="나이키", product_count=100)]
 
-    async def scan_categories(self, category_url, brand_name):
+    async def scan_categories(self, category_url: str, brand_name: str) -> List[CategoryInfo]:
         return [CategoryInfo(name="스니커즈", product_count=50)]
 
-    async def crawl_products(self, category_url, brand_name, categories=None, max_count=20):
+    async def crawl_products(
+        self,
+        category_url: str,
+        brand_name: str,
+        categories: Optional[List[str]] = None,
+        max_count: int = 20,
+    ) -> List[CrawledProduct]:
         return []
 
-    async def check_product(self, source_url):
+    async def check_product(self, source_url: str) -> Optional[CrawledProduct]:
         return None
 
 

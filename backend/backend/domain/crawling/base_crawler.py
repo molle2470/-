@@ -8,7 +8,9 @@ import asyncio
 import random
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from typing import Any, Awaitable, Callable, Dict, List, Optional, TypeVar
+
+_T = TypeVar("_T")
 
 
 USER_AGENTS = [
@@ -31,7 +33,7 @@ class CrawledProduct:
     thumbnail_url: Optional[str] = None
     image_urls: List[str] = field(default_factory=list)
     category: Optional[str] = None
-    options: List[Dict] = field(default_factory=list)  # [{"group": "색상", "values": ["블랙"]}]
+    options: List[Dict[str, object]] = field(default_factory=list)  # [{"group": "색상", "values": ["블랙"]}]
 
 
 @dataclass
@@ -65,7 +67,12 @@ class BaseCrawler(ABC):
         """랜덤 User-Agent 반환"""
         return random.choice(USER_AGENTS)
 
-    async def _request_with_retry(self, fetch_func, *args, **kwargs):
+    async def _request_with_retry(
+        self,
+        fetch_func: Callable[..., Awaitable[_T]],
+        *args: Any,
+        **kwargs: Any,
+    ) -> _T:
         """자동 재시도 (최대 3회, 지수 백오프)"""
         last_error: Optional[Exception] = None
         for attempt in range(self.max_retries):

@@ -4,7 +4,6 @@ MusinsaCrawler 단위 테스트.
 실제 HTTP 요청 없이 목업으로 테스트.
 """
 import pytest
-from unittest.mock import AsyncMock, patch
 from backend.domain.crawling.musinsa_crawler import MusinsaCrawler
 from backend.domain.crawling.base_crawler import CrawledProduct
 
