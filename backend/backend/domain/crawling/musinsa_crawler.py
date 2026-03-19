@@ -102,6 +102,8 @@ class MusinsaCrawler(BaseCrawler):
         실제 API 응답 구조 분석 후 필드명 매핑 필요.
         """
         try:
+            # 무신사 혜택 적용 가능 여부 파싱 (상품마다 다름)
+            benefit_info = item.get("benefitInfo", {})
             return CrawledProduct(
                 name=item.get("goodsName", ""),
                 original_price=int(item.get("normalPrice", 0)),
@@ -112,6 +114,10 @@ class MusinsaCrawler(BaseCrawler):
                 thumbnail_url=item.get("thumbnailImageUrl"),
                 image_urls=item.get("imageUrls", []),
                 category=item.get("category", {}).get("name"),
+                # 혜택 플래그 (API 응답 구조 분석 후 필드명 조정 필요)
+                grade_discount_available=benefit_info.get("gradeDiscountAvailable", True),
+                point_usable=benefit_info.get("pointUsable", True),
+                point_earnable=benefit_info.get("pointEarnable", True),
             )
         except (KeyError, ValueError, TypeError) as e:
             logger.warning(f"상품 파싱 실패: {e}")

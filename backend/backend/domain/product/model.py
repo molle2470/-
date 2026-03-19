@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Optional
 from sqlmodel import SQLModel, Field, JSON
-from sqlalchemy import Column, String, Integer, DateTime, Text, func, UniqueConstraint
+from sqlalchemy import Column, String, Integer, Boolean, DateTime, Text, func, UniqueConstraint
 
 
 class ProductStatusEnum(str, Enum):
@@ -48,6 +48,19 @@ class Product(SQLModel, table=True):
     source_product_id: str = Field(sa_column=Column(String(200), nullable=False))  # 소싱처 고유 ID
     source_category: Optional[str] = Field(default=None, sa_column=Column(String(500)))  # 소싱처 원본 카테고리
     mapped_category: Optional[str] = Field(default=None, sa_column=Column(String(500)))  # 매핑된 마켓 카테고리
+    # 소싱처 혜택 적용 가능 여부 (상품마다 다름, 가격 계산 시 참조)
+    grade_discount_available: bool = Field(
+        default=True,
+        sa_column=Column(Boolean, nullable=False, server_default="true"),
+    )
+    point_usable: bool = Field(
+        default=True,
+        sa_column=Column(Boolean, nullable=False, server_default="true"),
+    )
+    point_earnable: bool = Field(
+        default=True,
+        sa_column=Column(Boolean, nullable=False, server_default="true"),
+    )
     stock_status: StockStatusEnum = Field(
         default=StockStatusEnum.IN_STOCK,
         sa_column=Column(Text, nullable=False),

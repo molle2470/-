@@ -34,6 +34,10 @@ class CrawledProduct:
     image_urls: List[str] = field(default_factory=list)
     category: Optional[str] = None
     options: List[Dict[str, object]] = field(default_factory=list)  # [{"group": "색상", "values": ["블랙"]}]
+    # 소싱처 혜택 적용 가능 여부 (상품마다 다름, 무신사 기준)
+    grade_discount_available: bool = True   # 등급 할인 가능 여부
+    point_usable: bool = True               # 적립금 사용 가능 여부
+    point_earnable: bool = True             # 구매 적립 가능 여부
 
 
 @dataclass

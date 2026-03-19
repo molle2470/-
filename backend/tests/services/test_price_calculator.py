@@ -63,3 +63,90 @@ def test_zero_commission_rate():
     # 50000 / (1 - 0.0 - 0.20) = 50000 / 0.80 = 62500
     price = calc.calculate(original_price=50000, commission_rate=0.0, margin_rate=0.20)
     assert price == 62500
+
+
+# --- 등급 할인 적용 판매가 계산 테스트 ---
+
+
+def test_calculate_with_grade_discount_basic():
+    """중간 등급(블루 3%) 할인 적용 판매가 계산"""
+    calc = PriceCalculator()
+    # 정가 100,000 → 할인 3,000 → 실구매가 97,000 (적립금 없음)
+    # 97,000 / (1 - 0.08 - 0.20) = 97,000 / 0.72 = 134,722.2 → 134,723
+    price = calc.calculate_with_grade_discount(
+        original_price=100000,
+        base_discount_rate=0.03,
+        point_use_limit=0.05,
+        available_points=0,
+        commission_rate=0.08,
+        margin_rate=0.20,
+    )
+    assert price == 134723
+
+
+def test_calculate_with_grade_discount_and_points():
+    """등급 할인 + 적립금 사용 적용"""
+    calc = PriceCalculator()
+    # 정가 100,000 → 할인 5,000 → 적립금 한도 10,000 (보유 20,000) → 실구매가 85,000
+    # 85,000 / 0.72 = 118,055.5 → 118,056
+    price = calc.calculate_with_grade_discount(
+        original_price=100000,
+        base_discount_rate=0.05,
+        point_use_limit=0.10,
+        available_points=20000,
+        commission_rate=0.08,
+        margin_rate=0.20,
+    )
+    assert price == 118056
+
+
+def test_calculate_with_grade_discount_no_benefits():
+    """혜택 불가 상품 (등급 할인 X, 적립금 X) → 정가 기준 판매가"""
+    calc = PriceCalculator()
+    # 등급 할인 불가, 적립금 불가 → 실구매가 = 정가 100,000
+    # 100,000 / 0.72 = 138,888.8 → 138,889
+    price = calc.calculate_with_grade_discount(
+        original_price=100000,
+        base_discount_rate=0.05,  # 이 값은 무시됨
+        point_use_limit=0.10,    # 이 값도 무시됨
+        available_points=20000,
+        commission_rate=0.08,
+        margin_rate=0.20,
+        grade_discount_available=False,
+        point_usable=False,
+    )
+    assert price == 138889
+
+
+def test_calculate_with_grade_discount_partial_benefits():
+    """등급 할인 불가 + 적립금 사용 가능"""
+    calc = PriceCalculator()
+    # 등급 할인 불가 → 할인 0
+    # 적립금 사용 가능 → 한도: 100,000 * 0.10 = 10,000, 보유 20,000 → 10,000 사용
+    # 실구매가: 100,000 - 0 - 10,000 = 90,000
+    # 90,000 / 0.72 = 125,000
+    price = calc.calculate_with_grade_discount(
+        original_price=100000,
+        base_discount_rate=0.05,
+        point_use_limit=0.10,
+        available_points=20000,
+        commission_rate=0.08,
+        margin_rate=0.20,
+        grade_discount_available=False,
+        point_usable=True,
+    )
+    assert price == 125000
+
+
+def test_can_fulfill_order_positive_margin():
+    """마진 양수 → 주문 처리 가능"""
+    calc = PriceCalculator()
+    # 판매가 134,723, 현재 원가 97,500, 수수료 8%
+    assert calc.can_fulfill_order(134723, 97500, 0.08) is True
+
+
+def test_can_fulfill_order_negative_margin():
+    """마진 음수 → 주문 처리 불가 (원가 상승으로 손해)"""
+    calc = PriceCalculator()
+    # 판매가 90,000, 현재 원가 95,000 → 주문하면 손해
+    assert calc.can_fulfill_order(90000, 95000, 0.08) is False
