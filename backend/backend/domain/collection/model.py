@@ -84,7 +84,7 @@ class CollectionLog(SQLModel, table=True):
         default=None, foreign_key="collection_settings.id", nullable=True,
     )
     product_name: str = Field(sa_column=Column(String(500), nullable=False))
-    status: str = Field(sa_column=Column(String(20), nullable=False))
+    status: LogStatusEnum = Field(sa_column=Column(String(20), nullable=False))
     message: Optional[str] = Field(
         default=None, sa_column=Column(Text, nullable=True),
     )
@@ -102,9 +102,9 @@ class ExtensionCommand(SQLModel, table=True):
     )
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    command_type: str = Field(sa_column=Column(String(50), nullable=False))
+    command_type: CommandTypeEnum = Field(sa_column=Column(String(50), nullable=False))
     payload: str = Field(sa_column=Column(Text, nullable=False))
-    status: str = Field(
+    status: CommandStatusEnum = Field(
         default=CommandStatusEnum.PENDING,
         sa_column=Column(String(20), nullable=False, server_default="pending"),
     )

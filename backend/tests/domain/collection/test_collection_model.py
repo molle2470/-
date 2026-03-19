@@ -22,6 +22,7 @@ def test_collection_setting_creation():
     assert setting.max_count == 500
     assert setting.is_active is True
     assert setting.collected_count == 0
+    assert setting.created_at is not None
 
 
 def test_collection_log_creation():
