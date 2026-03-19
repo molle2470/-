@@ -4,7 +4,7 @@
 마켓 활성 계정 조회, 판매가 자동 계산, 마켓 등록 목록 조회 등
 마켓 도메인 핵심 비즈니스 로직을 담당합니다.
 """
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -87,10 +87,10 @@ class MarketService:
         Returns:
             필터 조건에 맞는 MarketListing 목록
         """
-        filters: dict = {}
+        kwargs: Dict[str, Any] = {}
         if product_id is not None:
-            filters["product_id"] = product_id
+            kwargs["product_id"] = product_id
         if account_id is not None:
-            filters["market_account_id"] = account_id
+            kwargs["market_account_id"] = account_id
 
-        return await self.listing_repo.filter_by_async(**filters)
+        return await self.listing_repo.filter_by_async(**kwargs)

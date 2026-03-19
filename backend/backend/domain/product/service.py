@@ -5,7 +5,20 @@
 상품 도메인 핵심 비즈니스 로직을 담당합니다.
 """
 from datetime import datetime, timezone
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, TypedDict, Union
+
+
+class CrawledProductData(TypedDict, total=False):
+    """크롤링된 상품 데이터 계약"""
+
+    source_product_id: str
+    name: str
+    original_price: int
+    source_url: str
+    thumbnail_url: Optional[str]
+    image_urls: Optional[List[str]]
+    source_category: Optional[str]
+    mapped_category: Optional[str]
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -26,7 +39,7 @@ class ProductService:
 
     async def create_from_crawled(
         self,
-        crawled_data: dict,
+        crawled_data: CrawledProductData,
         source_id: int,
         brand_id: int,
     ) -> Product:
@@ -78,7 +91,7 @@ class ProductService:
         product_id: int,
         new_price: int,
         new_stock_status: StockStatusEnum,
-    ) -> List[Tuple[str, object, object]]:
+    ) -> List[Tuple[str, Union[int, str], Union[int, str]]]:
         """
         가격/재고 변동 업데이트.
 
@@ -98,7 +111,7 @@ class ProductService:
         if product is None:
             return []
 
-        changes: List[Tuple[str, object, object]] = []
+        changes: List[Tuple[str, Union[int, str], Union[int, str]]] = []
 
         # 가격 변동 감지
         if product.original_price != new_price:

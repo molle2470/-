@@ -14,6 +14,7 @@ from backend.domain.monitoring.model import (
     PriceStockHistory,
 )
 from backend.domain.monitoring.service import MonitoringService
+from backend.domain.product.model import StockStatusEnum
 
 
 @pytest.mark.asyncio
@@ -55,8 +56,8 @@ async def test_record_stock_change_out_of_stock():
         service = MonitoringService(session)
         result = await service.record_stock_change(
             product_id=1,
-            previous_status="in_stock",
-            new_status="out_of_stock",
+            previous_status=StockStatusEnum.IN_STOCK,
+            new_status=StockStatusEnum.OUT_OF_STOCK,
         )
 
         assert result.change_type == ChangeTypeEnum.OUT_OF_STOCK
@@ -76,8 +77,8 @@ async def test_record_stock_change_restocked():
         service = MonitoringService(session)
         result = await service.record_stock_change(
             product_id=1,
-            previous_status="out_of_stock",
-            new_status="in_stock",
+            previous_status=StockStatusEnum.OUT_OF_STOCK,
+            new_status=StockStatusEnum.IN_STOCK,
         )
 
         assert result.change_type == ChangeTypeEnum.RESTOCKED

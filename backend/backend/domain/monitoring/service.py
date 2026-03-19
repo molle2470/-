@@ -14,6 +14,7 @@ from backend.domain.monitoring.model import (
     NotificationTypeEnum,
     PriceStockHistory,
 )
+from backend.domain.product.model import StockStatusEnum
 from backend.domain.monitoring.repository import (
     NotificationRepository,
     PriceStockHistoryRepository,
@@ -59,8 +60,8 @@ class MonitoringService:
     async def record_stock_change(
         self,
         product_id: int,
-        previous_status: str,
-        new_status: str,
+        previous_status: StockStatusEnum,
+        new_status: StockStatusEnum,
     ) -> PriceStockHistory:
         """
         재고 변동 이력 기록.
@@ -69,14 +70,14 @@ class MonitoringService:
 
         Args:
             product_id: 상품 ID
-            previous_status: 이전 재고 상태 (문자열)
-            new_status: 새 재고 상태 (문자열)
+            previous_status: 이전 재고 상태 (StockStatusEnum)
+            new_status: 새 재고 상태 (StockStatusEnum)
 
         Returns:
             생성된 PriceStockHistory 객체
         """
         # 재고 상태에 따른 change_type 결정
-        if new_status == "out_of_stock":
+        if new_status == StockStatusEnum.OUT_OF_STOCK:
             change_type = ChangeTypeEnum.OUT_OF_STOCK
         else:
             change_type = ChangeTypeEnum.RESTOCKED
@@ -84,8 +85,8 @@ class MonitoringService:
         history = PriceStockHistory(
             product_id=product_id,
             change_type=change_type,
-            previous_value=previous_status,
-            new_value=new_status,
+            previous_value=previous_status.value,
+            new_value=new_status.value,
         )
         self.session.add(history)
         await self.session.commit()
