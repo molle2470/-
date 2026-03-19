@@ -9,6 +9,7 @@ from typing import Union
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import inspect
 
 # revision identifiers, used by Alembic.
 revision: str = "a1b2c3d4e5f6"
@@ -52,7 +53,7 @@ def upgrade() -> None:
         sa.Column(
             "setting_id",
             sa.Integer(),
-            sa.ForeignKey("collection_settings.id"),
+            sa.ForeignKey("collection_settings.id", ondelete="SET NULL"),
             nullable=True,
         ),
         sa.Column("product_name", sa.String(500), nullable=False),
@@ -90,8 +91,11 @@ def upgrade() -> None:
         ["status"],
     )
 
-    # Product.brand_id를 nullable로 변경 (Task 2에서 변경됨)
-    op.alter_column("products", "brand_id", nullable=True)
+    # Product.brand_id를 nullable로 변경 (기존 DB 호환 — products 테이블이 있을 때만 실행)
+    bind = op.get_bind()
+    inspector = inspect(bind)
+    if "products" in inspector.get_table_names():
+        op.alter_column("products", "brand_id", nullable=True)
 
 
 def downgrade() -> None:

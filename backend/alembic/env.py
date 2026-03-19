@@ -4,7 +4,7 @@ import sys
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import create_engine, pool
 from sqlmodel import SQLModel
 
 # backend 패키지를 sys.path에 추가
@@ -30,9 +30,21 @@ if config.config_file_name is not None:
 target_metadata = SQLModel.metadata
 
 
+def _get_db_url() -> str:
+    """settings에서 write DB URL을 읽어 동기 드라이버로 변환하여 반환."""
+    from backend.core.config import settings
+
+    # write DB 접속 정보로 URL 직접 조합
+    url = (
+        f"postgresql://{settings.write_db_user}:{settings.write_db_password}"
+        f"@{settings.write_db_host}:{settings.write_db_port}/{settings.write_db_name}"
+    )
+    return url
+
+
 def run_migrations_offline() -> None:
     """오프라인 모드 — DB 연결 없이 SQL 스크립트만 생성."""
-    url = config.get_main_option("sqlalchemy.url")
+    url = _get_db_url()
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -45,11 +57,14 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     """온라인 모드 — 실제 DB에 마이그레이션 적용."""
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
+    # alembic.ini의 플레이스홀더 대신 settings에서 DB URL을 읽어 사용
+    db_url = _get_db_url()
+
+    connectable = create_engine(
+        db_url,
         poolclass=pool.NullPool,
     )
+
     with connectable.connect() as connection:
         context.configure(
             connection=connection,
