@@ -56,3 +56,9 @@ def test_command_status_enum_values():
     assert CommandStatusEnum.PROCESSING == "processing"
     assert CommandStatusEnum.DONE == "done"
     assert CommandStatusEnum.FAILED == "failed"
+
+
+def test_log_status_enum_values():
+    """LogStatusEnum 값 확인"""
+    assert LogStatusEnum.SUCCESS == "success"
+    assert LogStatusEnum.FAILED == "failed"

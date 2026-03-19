@@ -40,7 +40,8 @@
       "Read(//c/Users/tjdql/.local/bin/**)",
       "Read(//c/Users/tjdql/AppData/Local/uv/**)",
       "Bash(/c/Users/tjdql/wnsrlf/advanced-harness-main/backend/.venv/Scripts/python.exe -m pip install \"apscheduler>=3.10\")",
-      "Bash(.venv/Scripts/python.exe -m pytest tests/services/test_scheduler.py -v --tb=short)"
+      "Bash(.venv/Scripts/python.exe -m pytest tests/services/test_scheduler.py -v --tb=short)",
+      "Bash(python -m pytest tests/domain/collection/test_collection_model.py -v)"
     ]
   }
 }
