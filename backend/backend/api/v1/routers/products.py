@@ -10,7 +10,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.db.orm import get_read_session_dependency
 from backend.domain.product.model import ProductStatusEnum
 from backend.domain.product.service import ProductService
-from backend.domain.user.auth_service import get_user_id
 
 router = APIRouter(prefix="/products", tags=["products"])
 

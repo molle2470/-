@@ -10,7 +10,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.orm import get_read_session_dependency
 from backend.domain.collection.service import CollectionService
-from backend.domain.user.auth_service import get_user_id
 
 router = APIRouter(prefix="/collection-logs", tags=["collection-logs"])
 
