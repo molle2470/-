@@ -69,6 +69,18 @@ class BackendSettings(BaseSettings):
     anthropic_model: str = "claude-haiku-4-5-20251001"
 
     # ===========================================
+    # Naver Commerce API Configuration
+    # ===========================================
+    naver_client_id: Optional[str] = None
+    """네이버 커머스 API 클라이언트 ID"""
+
+    naver_client_secret: Optional[str] = None
+    """네이버 커머스 API 클라이언트 시크릿"""
+
+    naver_channel_id: Optional[str] = None
+    """스마트스토어 채널 ID"""
+
+    # ===========================================
     # CORS Configuration
     # ===========================================
     @computed_field
