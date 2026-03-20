@@ -5,7 +5,7 @@
 마켓 도메인 핵심 비즈니스 로직을 담당합니다.
 """
 from datetime import datetime, timezone
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
