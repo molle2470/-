@@ -4,7 +4,7 @@ import {
   MONITOR_ALARM_PREFIX,
   TAB_CLEANUP_PREFIX,
 } from "../shared/constants"
-import { sendHeartbeat, sendCollectedProduct } from "./api-client"
+import { sendHeartbeat, sendCollectedProduct, fetchProductSeo } from "./api-client"
 import { startCommandPolling, handleCommandPoll } from "./command-poller"
 import {
   handleMonitoringAlarm,
@@ -12,6 +12,9 @@ import {
   getMonitoringCount,
 } from "./monitoring-manager"
 import type { ContentMessage } from "../shared/types"
+
+// 마지막으로 수집한 상품 ID (네이버 자동입력에 활용)
+let lastCollectedProductId: number | null = null
 
 // 알람 이벤트 핸들러
 chrome.alarms.onAlarm.addListener(async (alarm) => {
@@ -36,6 +39,10 @@ chrome.runtime.onMessage.addListener((message: ContentMessage, sender, sendRespo
   if (message.type === "COLLECT_BUTTON_CLICKED") {
     // 개별 수집: 백엔드로 전송
     sendCollectedProduct("musinsa", message.data).then((result) => {
+      // 수집 성공 시 product_id 저장 (네이버 SEO 자동입력에 활용)
+      if (result?.product_id) {
+        lastCollectedProductId = result.product_id
+      }
       sendResponse({
         success: !!result,
         product_id: result?.product_id,
@@ -63,6 +70,27 @@ chrome.runtime.onMessage.addListener((message: ContentMessage, sender, sendRespo
       })
     }
     sendResponse({ success: true })
+  }
+
+  if (message.type === "NAVER_REGISTER_PAGE_LOADED") {
+    // 네이버 등록 페이지 로드 → 저장된 product_id로 SEO 데이터 조회 후 자동입력 트리거
+    if (lastCollectedProductId !== null) {
+      const productId = lastCollectedProductId
+      fetchProductSeo(productId).then((seoData) => {
+        if (seoData && sender.tab?.id) {
+          chrome.tabs.sendMessage(sender.tab.id, {
+            type: "SEO_AUTOFILL",
+            seoData,
+          }).catch(() => {
+            // content script가 아직 준비되지 않은 경우 무시
+          })
+        }
+        sendResponse({ success: true })
+      })
+    } else {
+      sendResponse({ success: true })
+    }
+    return true // 비동기 응답
   }
 })
 
