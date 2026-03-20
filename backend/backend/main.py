@@ -13,6 +13,7 @@ import backend.domain.market.model  # noqa: F401
 import backend.domain.monitoring.model  # noqa: F401
 import backend.domain.collection.model  # noqa: F401
 import backend.domain.user.model  # noqa: F401
+import backend.domain.product.seo_model  # noqa: F401
 
 from backend.api.v1.routers.auth import router as auth_router
 from backend.api.v1.routers.collection_logs import router as collection_logs_router
