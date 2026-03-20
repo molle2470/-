@@ -25,11 +25,10 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: "차차 YouTube | AI로 세상을 바꾸는 방법",
-    template: "%s | 차차 YouTube",
+    default: "소싱 대시보드",
+    template: "%s | 소싱 대시보드",
   },
-  description:
-    "바이브코딩, Claude Code, AI 자동화까지. 비개발자도 할 수 있는 AI 활용법을 매주 공유합니다.",
+  description: "무신사 상품 수집 및 네이버 스마트스토어 자동 등록 관리 도구",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
