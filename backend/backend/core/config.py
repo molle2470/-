@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -61,6 +61,12 @@ class BackendSettings(BaseSettings):
     # ===========================================
     extension_api_key: str = "sourcing-extension-phase1-key"
     """익스텐션 통신용 API 키 (Phase 1 기본값, 운영환경에서는 환경변수로 덮어쓸 것)"""
+
+    # ===========================================
+    # AI Configuration
+    # ===========================================
+    anthropic_api_key: Optional[str] = None
+    anthropic_model: str = "claude-haiku-4-5-20251001"
 
     # ===========================================
     # CORS Configuration
