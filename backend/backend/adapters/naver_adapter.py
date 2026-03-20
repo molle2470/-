@@ -12,7 +12,7 @@ import base64
 import hashlib
 import hmac
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 import httpx
 
@@ -31,7 +31,7 @@ class NaverAdapter(BaseMarketAdapter):
         self.client_secret = client_secret
         self.channel_id = channel_id
         self.http_client = httpx.AsyncClient(timeout=30.0)
-        self._access_token: Optional[str] = None
+        self._access_token: str | None = None
         self._token_expires_at: float = 0.0
 
     async def close(self) -> None:
@@ -70,7 +70,7 @@ class NaverAdapter(BaseMarketAdapter):
         self._token_expires_at = time.time() + expires_in
         return self._access_token
 
-    def _get_headers(self, access_token: str) -> Dict[str, str]:
+    def _get_headers(self, access_token: str) -> dict[str, str]:
         return {
             "Authorization": f"Bearer {access_token}",
             "Content-Type": "application/json",
@@ -92,7 +92,7 @@ class NaverAdapter(BaseMarketAdapter):
             raise ValueError(f"이미지 업로드 응답에 URL 없음: {response.json()}")
         return str(images[0]["url"])
 
-    def _build_product_info_notice(self, notice_type: str) -> Dict[str, Any]:
+    def _build_product_info_notice(self, notice_type: str) -> dict[str, Any]:
         """카테고리별 상품정보제공고시 생성."""
         common_notice = {
             "returnCostReason": "제조사 및 수입원에 의한 경우 제조사 또는 수입원에서 부담",
@@ -101,7 +101,7 @@ class NaverAdapter(BaseMarketAdapter):
             "compensationProcedure": "소비자분쟁해결규정에 따름",
             "troubleShootingContents": "소비자분쟁해결규정에 따름",
         }
-        notice_data: Dict[str, Any] = {"productInfoProvidedNoticeType": notice_type}
+        notice_data: dict[str, Any] = {"productInfoProvidedNoticeType": notice_type}
         type_key = notice_type.lower() if notice_type != "ETC" else "etc"
         notice_data[type_key] = {
             **common_notice,
@@ -113,8 +113,8 @@ class NaverAdapter(BaseMarketAdapter):
         return notice_data
 
     async def _build_product_payload(
-        self, product_data: Dict[str, Any], naver_image_url: str
-    ) -> Dict[str, Any]:
+        self, product_data: dict[str, Any], naver_image_url: str
+    ) -> dict[str, Any]:
         """상품 데이터 → 네이버 커머스 API v2 등록 payload 변환."""
         category_info = get_naver_category_info(
             str(product_data.get("source_category") or "")
@@ -164,7 +164,7 @@ class NaverAdapter(BaseMarketAdapter):
             },
         }
 
-    async def register_product(self, product_data: Dict[str, Any]) -> Optional[str]:
+    async def register_product(self, product_data: dict[str, Any]) -> str | None:
         """이미지 업로드 후 상품 등록 → originProductNo 반환."""
         thumbnail_url = str(product_data.get("thumbnail_url") or "")
         naver_image_url = await self.upload_image(thumbnail_url)
@@ -182,7 +182,7 @@ class NaverAdapter(BaseMarketAdapter):
         origin_no = response.json().get("originProductNo")
         return str(origin_no) if origin_no else None
 
-    async def _get_product(self, market_product_id: str) -> Dict[str, Any]:
+    async def _get_product(self, market_product_id: str) -> dict[str, Any]:
         """기존 상품 전체 데이터 조회 (수정 시 필드 병합용)"""
         access_token = await self._get_access_token()
         headers = self._get_headers(access_token)

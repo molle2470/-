@@ -3,7 +3,7 @@
 모든 마켓(쿠팡, 네이버 스마트스토어 등) 어댑터의 기반 추상 클래스.
 """
 from abc import ABC, abstractmethod
-from typing import Dict, Optional
+from typing import Any
 
 
 class BaseMarketAdapter(ABC):
@@ -13,7 +13,7 @@ class BaseMarketAdapter(ABC):
     """
 
     @abstractmethod
-    async def register_product(self, product_data: Dict[str, object]) -> Optional[str]:
+    async def register_product(self, product_data: dict[str, Any]) -> str | None:
         """상품 등록, 마켓 상품 ID 반환"""
         ...
 
