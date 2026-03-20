@@ -47,7 +47,10 @@ DOMESTIC_BRAND_KEYWORDS: list[str] = [
     "마하그리드", "플리츠마마", "뮬라웨어", "뉴발란스코리아",
 ]
 
-# 카테고리별 기본 소재
+# 매 호출 시 리스트 재생성 방지: 모듈 레벨에서 대문자 변환 캐싱
+_DOMESTIC_BRAND_UPPER: frozenset[str] = frozenset(b.upper() for b in DOMESTIC_BRAND_KEYWORDS)
+
+# 카테고리별 기본 소재 (MUSINSA_TO_NAVER_CATEGORY 키와 일치)
 CATEGORY_DEFAULT_MATERIAL: dict[str, str] = {
     "스니커즈": "합성섬유/합성피혁",
     "슬립온": "합성섬유/합성피혁",
@@ -59,13 +62,23 @@ CATEGORY_DEFAULT_MATERIAL: dict[str, str] = {
     "반소매 티셔츠": "면혼합",
     "긴소매 티셔츠": "면혼합",
     "맨투맨": "면폴리혼합",
+    "스웨트셔츠": "면폴리혼합",  # 알리아스 추가
     "후드 티셔츠": "면폴리혼합",
+    "후디": "면폴리혼합",         # 알리아스 추가
     "니트": "아크릴혼합",
+    "스웨터": "아크릴혼합",       # 알리아스 추가
     "바지": "면폴리혼합",
+    "팬츠": "면폴리혼합",         # 알리아스 추가
     "반바지": "면폴리혼합",
+    "숏팬츠": "면폴리혼합",       # 알리아스 추가
     "모자": "면폴리혼합",
+    "캡": "면폴리혼합",           # 알리아스 추가
+    "비니": "아크릴혼합",         # 알리아스 추가
     "가방": "합성섬유",
+    "백팩": "합성섬유",           # 알리아스 추가
+    "토트백": "합성섬유",         # 알리아스 추가
     "양말": "면혼합",
+    "레깅스": "나일론혼합",       # 알리아스 추가
 }
 
 
@@ -76,7 +89,7 @@ def get_naver_category_id(source_category: str) -> Optional[str]:
     if source_category in MUSINSA_TO_NAVER_CATEGORY:
         return MUSINSA_TO_NAVER_CATEGORY[source_category]
     for key, value in MUSINSA_TO_NAVER_CATEGORY.items():
-        if key in source_category or source_category in key:
+        if key in source_category:
             return value
     return None
 
@@ -102,7 +115,8 @@ def infer_gender(brand: str, product_name: str) -> str:
 
 def infer_origin(brand: str) -> str:
     """브랜드명으로 원산지 추론 (기본값: 해외)"""
-    if any(domestic in brand.upper() for domestic in [b.upper() for b in DOMESTIC_BRAND_KEYWORDS]):
+    brand_upper = brand.upper()
+    if any(domestic in brand_upper for domestic in _DOMESTIC_BRAND_UPPER):
         return "국내"
     return "해외"
 

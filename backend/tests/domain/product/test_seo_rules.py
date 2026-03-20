@@ -61,3 +61,15 @@ def test_get_material_default_clothing():
     """의류 기본 소재"""
     result = get_material_default("반소매 티셔츠")
     assert result == "면혼합"
+
+
+def test_infer_gender_women():
+    """우먼 키워드가 있으면 여성 반환"""
+    result = infer_gender("나이키", "우먼 에어맥스")
+    assert result == "여성"
+
+
+def test_infer_gender_men():
+    """MENS 키워드가 있으면 남성 반환"""
+    result = infer_gender("나이키", "MENS 에어맥스")
+    assert result == "남성"
