@@ -20,7 +20,10 @@
       "run_at": "document_start"
     },
     {
-      "matches": ["https://www.musinsa.com/app/goods/*"],
+      "matches": [
+        "https://www.musinsa.com/app/goods/*",
+        "https://www.musinsa.com/products/*"
+      ],
       "js": ["src/content/musinsa-product.tsx"],
       "run_at": "document_idle"
     }

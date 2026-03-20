@@ -4,6 +4,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.core.config import settings
+
+# SQLAlchemy FK 해결을 위해 모든 도메인 모델 선임포트
+import backend.domain.source.model  # noqa: F401
+import backend.domain.brand.model  # noqa: F401
+import backend.domain.product.model  # noqa: F401
+import backend.domain.market.model  # noqa: F401
+import backend.domain.monitoring.model  # noqa: F401
+import backend.domain.collection.model  # noqa: F401
+import backend.domain.user.model  # noqa: F401
+
 from backend.api.v1.routers.auth import router as auth_router
 from backend.api.v1.routers.collection_logs import router as collection_logs_router
 from backend.api.v1.routers.collection_settings import router as collection_settings_router

@@ -11,10 +11,57 @@
 
 import type { ProductData, BackgroundMessage } from "../shared/types"
 
-// 캡처된 상품 데이터 (Background SW에서 수신)
+// 캡처된 상품 데이터
 let capturedProductData: ProductData | null = null
 
-// Background SW에서 PRODUCT_DATA_READY 수신 (tabs.sendMessage로 전달됨)
+// __NEXT_DATA__에서 상품 데이터 직접 파싱 (무신사 /products/ 페이지)
+function parseFromNextData(): ProductData | null {
+  try {
+    // Content Script는 isolated world라 window.__NEXT_DATA__ 접근 불가
+    // HTML에 삽입된 <script id="__NEXT_DATA__"> 태그에서 직접 읽음
+    const el = document.getElementById("__NEXT_DATA__")
+    if (!el) return null
+    const nextData = JSON.parse(el.textContent || "")
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data = (nextData as any)?.props?.pageProps?.meta?.data
+    if (!data || !data.goodsNo) return null
+
+    // 상품명 + 품번(styleNo) 조합 — styleNo가 이미 포함된 경우 중복 방지
+    const goodsNm = String(data.goodsNm || "")
+    const styleNo = String(data.styleNo || "")
+    const productName = styleNo && !goodsNm.includes(styleNo)
+      ? `${goodsNm} / ${styleNo}`
+      : goodsNm
+
+    const priceObj = data.normalPrice as Record<string, number> | number | undefined
+    const price = typeof priceObj === "object" && priceObj !== null
+      ? (priceObj.normalPrice ?? priceObj.salePrice ?? 0)
+      : Number(priceObj ?? 0)
+
+    const imgBase = "https://image.msscdn.net"
+
+    return {
+      name: productName,
+      original_price: price,
+      source_url: `https://www.musinsa.com/products/${data.goodsNo}`,
+      source_product_id: String(data.goodsNo),
+      brand_name: String(data.brandInfo?.brandName || data.brand || ""),
+      stock_status: data.isSoldOut ? "out_of_stock" : "in_stock",
+      grade_discount_available: true,
+      point_usable: true,
+      point_earnable: true,
+      thumbnail_url: data.thumbnailImageUrl ? `${imgBase}${data.thumbnailImageUrl}` : null,
+      image_urls: Array.isArray(data.goodsImages)
+        ? data.goodsImages.map((img: { imageUrl: string }) => `${imgBase}${img.imageUrl}`)
+        : [],
+      options: [],
+    }
+  } catch {
+    return null
+  }
+}
+
+// Background SW에서 PRODUCT_DATA_READY 수신 (구형 /app/goods/ 페이지 fallback)
 chrome.runtime.onMessage.addListener((message: BackgroundMessage, _sender, sendResponse) => {
   if (message.type === "PRODUCT_DATA_READY") {
     capturedProductData = message.data
@@ -118,3 +165,10 @@ function createCollectButton(): HTMLButtonElement {
 
 // 페이지 로드 시 버튼 삽입 (document_idle이므로 DOM 준비됨)
 createCollectButton()
+
+// __NEXT_DATA__ 직접 파싱 시도 (/products/ 페이지)
+const nextDataProduct = parseFromNextData()
+if (nextDataProduct) {
+  capturedProductData = nextDataProduct
+  updateButtonState("ready")
+}

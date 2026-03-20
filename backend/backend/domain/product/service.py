@@ -163,10 +163,15 @@ class ProductService:
         if existing is not None:
             return existing
 
-        # 브랜드 조회 (brand_name → brand_id)
+        # 브랜드 조회 — 없으면 자동 생성 (is_ip_approved=False로 등록)
         brand_repo = BrandRepository(self.session)
         brand = await brand_repo.find_by_name(data.brand_name)
-        brand_id = brand.id if brand else None  # 미등록 브랜드는 NULL (나중에 매핑)
+        if brand is None and data.brand_name:
+            brand = await brand_repo.create_async(
+                name=data.brand_name,
+                is_ip_approved=False,
+            )
+        brand_id = brand.id if brand else None
 
         # 상품 생성 (Product 모델에 있는 필드만 설정, repo.create_async 패턴 사용)
         return await self.repo.create_async(
