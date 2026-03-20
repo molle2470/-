@@ -5,7 +5,7 @@
 마켓 도메인 핵심 비즈니스 로직을 담당합니다.
 """
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -21,6 +21,7 @@ from backend.domain.market.repository import (
     MarketListingRepository,
     MarketTemplateRepository,
 )
+from backend.domain.product.model import Product
 from backend.services.price_calculator import PriceCalculator
 
 
@@ -105,7 +106,7 @@ class MarketService:
 
     async def register_product_to_market(
         self,
-        product: Any,
+        product: Product,
         market_account_id: int,
         market_id: int,
         common_template_id: int,
@@ -142,6 +143,9 @@ class MarketService:
         )
 
         # 마켓 템플릿에서 반품배송비 조회
+        # TODO: calculate_selling_price 내부에서도 find_by_market을 호출하여 DB 조회가 2회 발생함.
+        #       추후 template 객체를 파라미터로 받거나, 단일 조회 후 commission_rate/return_fee를
+        #       함께 처리하는 방식으로 리팩토링 필요.
         template = await self.template_repo.find_by_market(market_id=market_id)
         return_fee = template.return_fee if template else 5000
 

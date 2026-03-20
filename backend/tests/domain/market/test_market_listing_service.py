@@ -140,3 +140,6 @@ async def test_register_product_to_market_api_failure_records_failed(mock_sessio
     assert mock_session.add.called
     added_listing = mock_session.add.call_args[0][0]
     assert added_listing.listing_status == ListingStatusEnum.FAILED
+    # API 실패 시에도 flush/commit이 호출되어 FAILED 레코드가 DB에 기록되어야 함
+    mock_session.flush.assert_called_once()
+    mock_session.commit.assert_called_once()
