@@ -1,7 +1,10 @@
 "use client"
 
 import Image from "next/image"
-import type { SourcingProduct } from "@/types/sourcing"
+import { useState, useCallback } from "react"
+import type { SourcingProduct, ProductSeo } from "@/types/sourcing"
+import { getSeoData } from "@/lib/api/seo"
+import { SeoPreviewModal } from "./SeoPreviewModal"
 
 interface Props {
   products: SourcingProduct[]
@@ -40,6 +43,13 @@ function StatusBadge({ status }: { status: string }) {
 
 /** 수집 상품 목록 테이블 */
 export function ProductsTable({ products }: Props) {
+  const [seoModal, setSeoModal] = useState<{ productId: number; seo: ProductSeo } | null>(null)
+
+  const openSeoModal = useCallback(async (productId: number) => {
+    const seo = await getSeoData(productId)
+    if (seo) setSeoModal({ productId, seo })
+  }, [])
+
   if (products.length === 0) {
     return (
       <div className="rounded-lg border border-gray-200 bg-white px-4 py-10 text-center text-sm text-gray-400">
@@ -49,6 +59,15 @@ export function ProductsTable({ products }: Props) {
   }
 
   return (
+    <>
+      {seoModal && (
+        <SeoPreviewModal
+          productId={seoModal.productId}
+          seo={seoModal.seo}
+          onClose={() => setSeoModal(null)}
+          onSaved={() => setSeoModal(null)}
+        />
+      )}
     <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
       <table className="min-w-full divide-y divide-gray-200 text-sm">
         <thead className="bg-gray-50">
@@ -70,6 +89,9 @@ export function ProductsTable({ products }: Props) {
             </th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
               수집일
+            </th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              SEO
             </th>
           </tr>
         </thead>
@@ -123,10 +145,20 @@ export function ProductsTable({ products }: Props) {
               <td className="px-4 py-3 whitespace-nowrap text-gray-400">
                 {new Date(product.created_at).toLocaleDateString("ko-KR")}
               </td>
+              {/* SEO */}
+              <td className="px-4 py-3 whitespace-nowrap">
+                <button
+                  onClick={() => void openSeoModal(product.id)}
+                  className="inline-flex items-center rounded px-2 py-1 text-xs font-medium bg-indigo-50 text-indigo-700 hover:bg-indigo-100"
+                >
+                  SEO 보기
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
     </div>
+    </>
   )
 }

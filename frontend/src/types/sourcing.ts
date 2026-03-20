@@ -67,3 +67,33 @@ export interface ExtensionStatus {
   monitoring_count: number
   last_heartbeat: string | null
 }
+
+/** 상품 SEO 데이터 */
+export interface ProductSeo {
+  id: number
+  product_id: number
+  market_type: string
+  optimized_name: string
+  tags: string[] | null
+  naver_category_id: string | null
+  brand: string
+  material: string | null
+  color: string | null
+  gender: string | null
+  age_group: string
+  origin: string
+  status: "generated" | "edited" | "fallback" | "failed"
+  generated_at: string
+  edited_at: string | null
+}
+
+/** SEO 수정 폼 */
+export interface SeoUpdateForm {
+  optimized_name?: string
+  tags?: string[]
+  material?: string
+  color?: string
+  gender?: string
+  age_group?: string
+  origin?: string
+}
