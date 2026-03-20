@@ -7,7 +7,8 @@
   "host_permissions": [
     "https://*.musinsa.com/*",
     "https://api.musinsa.com/*",
-    "http://localhost:28080/*"
+    "http://localhost:28080/*",
+    "https://sell.smartstore.naver.com/*"
   ],
   "background": {
     "service_worker": "src/background/index.ts",
@@ -25,6 +26,11 @@
         "https://www.musinsa.com/products/*"
       ],
       "js": ["src/content/musinsa-product.tsx"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://sell.smartstore.naver.com/*"],
+      "js": ["src/content/naver-seo-autofill.ts"],
       "run_at": "document_idle"
     }
   ],

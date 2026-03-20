@@ -103,3 +103,17 @@ export async function sendHeartbeat(monitoringCount: number): Promise<void> {
     // 서버 다운 시 무시
   })
 }
+
+/** product_id로 SEO 데이터 조회 */
+export async function fetchProductSeo(productId: number): Promise<Record<string, unknown> | null> {
+  try {
+    const headers = await getHeaders()
+    const res = await fetch(`${API_BASE_URL}/products/${productId}/seo`, {
+      headers,
+    })
+    if (!res.ok) return null
+    return res.json() as Promise<Record<string, unknown>>
+  } catch {
+    return null
+  }
+}

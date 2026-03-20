@@ -49,3 +49,4 @@ export type ContentMessage =
 /** Background → Content Script 메시지 */
 export type BackgroundMessage =
   | { type: "PRODUCT_DATA_READY"; data: ProductData }
+  | { type: "SEO_AUTOFILL"; seoData: Record<string, unknown> }
