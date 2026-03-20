@@ -54,6 +54,7 @@ _DOMESTIC_BRAND_UPPER: frozenset[str] = frozenset(b.upper() for b in DOMESTIC_BR
 CATEGORY_DEFAULT_MATERIAL: dict[str, str] = {
     "스니커즈": "합성섬유/합성피혁",
     "슬립온": "합성섬유/합성피혁",
+    "보트슈즈": "합성피혁",           # 알리아스 추가
     "로퍼": "합성피혁",
     "부츠": "합성피혁",
     "워커": "합성피혁",
