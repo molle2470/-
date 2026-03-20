@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, TypedDict
 
 from backend.domain.product.seo_rules import (
     extract_color,
@@ -20,6 +20,25 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+# 기본 연령대 상수
+_DEFAULT_AGE_GROUP = "성인"
+
+
+class SeoGenerationResult(TypedDict):
+    """SEO 생성 결과 타입"""
+    product_id: int
+    market_type: str
+    optimized_name: str
+    tags: List[str]
+    naver_category_id: Optional[str]
+    brand: str
+    material: Optional[str]
+    color: Optional[str]
+    gender: str
+    age_group: str
+    origin: str
+    status: Literal["generated", "fallback"]
+
 
 class SeoGeneratorService:
     """규칙 기반 + Claude API 하이브리드 SEO 생성 서비스"""
@@ -28,13 +47,23 @@ class SeoGeneratorService:
         self.api_key = api_key
         self.model = model
         self._rule_generator = SeoGenerator()
+        # anthropic 패키지 설치 확인 (미설치 시 api_key 강제 None + 경고)
+        if api_key:
+            try:
+                import anthropic  # noqa: F401
+            except ImportError:
+                logger.warning(
+                    "[SEO] anthropic 패키지가 설치되지 않았습니다. "
+                    "pip install anthropic 후 재시작하세요. fallback 모드로 동작합니다."
+                )
+                self.api_key = None
 
     async def generate(
         self,
         product_data: "ExtensionProductData",
         product_id: int,
         market_type: str = "naver",
-    ) -> Dict[str, Any]:
+    ) -> SeoGenerationResult:
         """
         SEO 데이터 생성.
 
@@ -94,7 +123,7 @@ class SeoGeneratorService:
             "material": (claude_result or {}).get("material") or material_default,
             "color": color,
             "gender": gender,
-            "age_group": "성인",
+            "age_group": _DEFAULT_AGE_GROUP,
             "origin": origin,
             "status": status,
         }
@@ -137,4 +166,9 @@ class SeoGeneratorService:
             text = text.split("```")[1]
             if text.startswith("json"):
                 text = text[4:]
-        return json.loads(text)
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError as e:
+            raise ValueError(
+                f"Claude API 응답 JSON 파싱 실패: {e}\n응답 텍스트: {text[:200]}"
+            ) from e
