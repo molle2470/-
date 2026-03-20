@@ -31,6 +31,9 @@ from backend.domain.product.service import ProductService
 from backend.domain.brand.repository import BrandRepository
 from backend.services.price_calculator import PriceCalculator
 from backend.services.seo_generator import SeoGenerator
+from backend.domain.product.seo_service import SeoGeneratorService
+from backend.domain.product.seo_repository import ProductSeoRepository
+from backend.core.config import settings
 from backend.utils.logger import logger
 
 
@@ -103,6 +106,8 @@ class CollectionService:
         self.brand_repo = BrandRepository(session)
         self.price_calculator = PriceCalculator()
         self.seo_generator = SeoGenerator()
+        self.seo_service = SeoGeneratorService(api_key=settings.anthropic_api_key)
+        self.seo_repo = ProductSeoRepository(session)
 
     async def create_setting(
         self, data: CollectionSettingCreateRequest,
@@ -179,16 +184,16 @@ class CollectionService:
         except ValueError as e:
             logger.warning(f"판매가 계산 실패: {e}")
 
-        # 4. SeoGenerator로 태그 생성
-        tags = self.seo_generator.generate_tags(
-            brand=product_data.brand_name,
-            category="",
-            product_name=product_data.name,
-        )
-        logger.info(f"SEO 태그 생성: {tags[:5]}...")
-        # TODO: seo_tags 저장 — Task 5 DB 마이그레이션 후 활성화
-        # (Product 모델에 seo_tags 필드 추가 후 아래 코드 활성화)
-        # await self.product_service.repo.update_async(product.id, seo_tags=tags)
+        # 4. SEO 데이터 생성 + 저장
+        try:
+            seo_data = await self.seo_service.generate(
+                product_data=product_data,
+                product_id=product.id,
+            )
+            await self.seo_repo.create_async(**seo_data)
+            logger.info(f"SEO 생성 완료 (product_id={product.id}, status={seo_data['status']})")
+        except Exception as e:
+            logger.warning(f"SEO 생성 실패 (product_id={product.id}): {e}")
 
         # 5. 수집 로그 기록
         log_message = ip_warning if ip_warning else None
