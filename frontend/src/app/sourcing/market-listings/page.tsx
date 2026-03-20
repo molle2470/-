@@ -1,9 +1,18 @@
-/** 마켓 등록 관리 페이지 (Phase 1 placeholder) */
-export default function MarketListingsPage() {
+import { MarketListingTable } from "@/components/sourcing/MarketListingTable"
+import { serverFetchList } from "@/lib/server-fetch"
+import type { MarketListing } from "@/lib/market-listings-api"
+
+/** 마켓 등록 관리 페이지 */
+export default async function MarketListingsPage() {
+  const listings = await serverFetchList<MarketListing>("/api/v1/market-listings")
+
   return (
     <div>
-      <h1 className="text-xl font-semibold mb-4">마켓 등록 관리</h1>
-      <p className="text-gray-500">Phase 2에서 스마트스토어 자동 등록 기능을 구현 예정입니다.</p>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-xl font-semibold text-gray-900">마켓 등록 관리</h1>
+        <span className="text-sm text-gray-400">총 {listings.length.toLocaleString()}개</span>
+      </div>
+      <MarketListingTable listings={listings} />
     </div>
   )
 }

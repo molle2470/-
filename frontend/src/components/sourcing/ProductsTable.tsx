@@ -5,6 +5,7 @@ import { useState, useCallback } from "react"
 import type { SourcingProduct, ProductSeo } from "@/types/sourcing"
 import { getSeoData } from "@/lib/api/seo"
 import { SeoPreviewModal } from "./SeoPreviewModal"
+import { RegisterButton } from "./RegisterButton"
 
 interface Props {
   products: SourcingProduct[]
@@ -97,6 +98,9 @@ export function ProductsTable({ products }: Props) {
             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
               SEO
             </th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              마켓 등록
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
@@ -157,6 +161,10 @@ export function ProductsTable({ products }: Props) {
                 >
                   SEO 보기
                 </button>
+              </td>
+              {/* 마켓 등록 */}
+              <td className="px-4 py-3 whitespace-nowrap">
+                <RegisterButton productId={product.id} />
               </td>
             </tr>
           ))}
