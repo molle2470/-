@@ -30,7 +30,6 @@ from backend.domain.collection.repository import (
 from backend.domain.product.service import ProductService
 from backend.domain.brand.repository import BrandRepository
 from backend.services.price_calculator import PriceCalculator
-from backend.services.seo_generator import SeoGenerator
 from backend.domain.product.seo_service import SeoGeneratorService
 from backend.domain.product.seo_repository import ProductSeoRepository
 from backend.core.config import settings
@@ -194,6 +193,7 @@ class CollectionService:
             logger.info(f"SEO 생성 완료 (product_id={product.id}, status={seo_data['status']})")
         except Exception as e:
             logger.warning(f"SEO 생성 실패 (product_id={product.id}): {e}")
+            await self.session.rollback()  # unique constraint 위반 등으로 세션 오염 방지
 
         # 5. 수집 로그 기록
         log_message = ip_warning if ip_warning else None
