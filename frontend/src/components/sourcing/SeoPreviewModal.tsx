@@ -12,7 +12,7 @@ interface Props {
 }
 
 /** SEO 상태 뱃지 */
-function SeoStatusBadge({ status }: { status: string }) {
+function SeoStatusBadge({ status }: { status: ProductSeo["status"] }) {
   const map: Record<string, { label: string; cls: string }> = {
     generated: { label: "AI 생성", cls: "bg-blue-100 text-blue-700" },
     edited: { label: "수동 수정", cls: "bg-purple-100 text-purple-700" },

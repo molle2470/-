@@ -46,8 +46,12 @@ export function ProductsTable({ products }: Props) {
   const [seoModal, setSeoModal] = useState<{ productId: number; seo: ProductSeo } | null>(null)
 
   const openSeoModal = useCallback(async (productId: number) => {
-    const seo = await getSeoData(productId)
-    if (seo) setSeoModal({ productId, seo })
+    try {
+      const seo = await getSeoData(productId)
+      if (seo) setSeoModal({ productId, seo })
+    } catch {
+      console.error(`SEO 데이터 조회 실패 (productId=${productId})`)
+    }
   }, [])
 
   if (products.length === 0) {
