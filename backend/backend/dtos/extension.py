@@ -24,6 +24,7 @@ class ExtensionProductData(BaseModel):
     thumbnail_url: Optional[str] = None
     image_urls: List[str] = Field(default_factory=list)
     options: List[ProductOptionData] = Field(default_factory=list)
+    source_category: Optional[str] = None
 
 
 class ExtensionProductRequest(BaseModel):

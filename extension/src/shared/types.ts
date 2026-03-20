@@ -12,6 +12,7 @@ export interface ProductData {
   thumbnail_url: string | null
   image_urls: string[]
   options: ProductOption[]
+  source_category: string | null
 }
 
 export interface ProductOption {

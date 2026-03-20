@@ -40,6 +40,14 @@ function parseFromNextData(): ProductData | null {
 
     const imgBase = "https://image.msscdn.net"
 
+    // 무신사 __NEXT_DATA__ 구조에서 카테고리 추출
+    const sourceCategory = String(
+      data.categoryInfo?.categoryName
+      || data.category?.categoryName
+      || data.goodsCategory?.categoryName
+      || ""
+    ) || null
+
     return {
       name: productName,
       original_price: price,
@@ -55,6 +63,7 @@ function parseFromNextData(): ProductData | null {
         ? data.goodsImages.map((img: { imageUrl: string }) => `${imgBase}${img.imageUrl}`)
         : [],
       options: [],
+      source_category: sourceCategory,
     }
   } catch {
     return null
