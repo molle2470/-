@@ -9,7 +9,7 @@ import { registerToMarket } from "@/lib/market-listings-api"
  */
 const NAVER_MARKET_ACCOUNT_ID = 1
 const NAVER_MARKET_ID = 1
-const COMMON_TEMPLATE_ID = 1
+const COMMON_TEMPLATE_ID = 2
 
 interface Props {
   productId: number

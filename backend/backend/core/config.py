@@ -110,7 +110,8 @@ class BackendSettings(BaseSettings):
     def cors_origin_regex(self) -> str | None:
         """Get CORS origin regex based on environment."""
         if self.environment == "development":
-            return r"https?://(.+\.localhost(:\d+)?|localhost(:\d+)?)"
+            # localhost + 크롬 익스텐션 오리진 허용
+            return r"(https?://(.+\.localhost(:\d+)?|localhost(:\d+)?)|chrome-extension://.*)"
         return None
 
     # ===========================================

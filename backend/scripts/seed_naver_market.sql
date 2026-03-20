@@ -3,6 +3,10 @@
 -- =========================================================
 -- 실행 순서: common_templates → markets → market_accounts → market_templates
 -- 주의: 이미 데이터가 존재할 경우 ON CONFLICT 절로 중복 삽입을 방지합니다.
+-- 주의: common_templates, market_accounts는 unique constraint가 없어
+--       ON CONFLICT DO NOTHING이 동작하지 않으므로 아래 가이드를 참고하세요.
+--       → 스크립트를 두 번 이상 실행하기 전에 기존 데이터 여부를 먼저 확인하세요.
+--       예: SELECT * FROM common_templates; SELECT * FROM market_accounts;
 -- =========================================================
 
 -- 1. 사업자 그룹 (BusinessGroup)

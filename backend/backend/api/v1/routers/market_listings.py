@@ -131,6 +131,8 @@ async def deactivate_listing(
     )
     try:
         # market_product_id가 있는 경우에만 네이버 API 호출
+        # 예외 발생 시 finally에서 adapter 종료 후 예외가 전파되므로
+        # 아래 DB 업데이트(DEACTIVATED)는 실행되지 않음 — 의도된 동작
         if listing.market_product_id:
             await adapter.deactivate_product(listing.market_product_id)
     finally:

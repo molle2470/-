@@ -27,7 +27,8 @@ router = APIRouter(prefix="/extension", tags=["extension"])
 def _debug_log(msg: str) -> None:
     """디버그 로그를 파일에 기록 (stdout이 안 보이는 환경 대비)"""
     import datetime
-    with open("debug_collect.log", "a", encoding="utf-8") as f:
+    log_path = r"C:\Users\tjdql\wnsrlf\advanced-harness-main\backend\debug_collect.log"
+    with open(log_path, "a", encoding="utf-8") as f:
         f.write(f"[{datetime.datetime.now()}] {msg}\n")
 
 
