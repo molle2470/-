@@ -136,7 +136,10 @@ class SeoGeneratorService:
         original_price: int,
     ) -> Dict[str, Any]:
         """Claude API 호출하여 SEO 필드 생성"""
-        import anthropic
+        try:
+            import anthropic
+        except ImportError as e:
+            raise RuntimeError("anthropic 패키지가 설치되지 않았습니다. pip install anthropic") from e
 
         client = anthropic.AsyncAnthropic(api_key=self.api_key)
         prompt = f"""네이버 스마트스토어 SEO 최적화 전문가로서 아래 패션 상품의 SEO 데이터를 JSON으로 생성해주세요.
