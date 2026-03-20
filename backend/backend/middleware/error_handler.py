@@ -123,11 +123,9 @@ def register_exception_handlers(app: FastAPI) -> None:
     async def general_exception_handler(
         request: Request, exc: Exception
     ) -> JSONResponse:
-        logger.exception(
-            f"Unexpected error during request to {request.url}: {exc}",
-            exc_info=True,
-        )
+        import traceback
+        tb = traceback.format_exc()
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"detail": "Internal server error"},
+            content={"detail": str(exc), "type": type(exc).__name__, "traceback": tb},
         )

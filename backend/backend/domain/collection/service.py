@@ -104,7 +104,6 @@ class CollectionService:
         self.product_service = ProductService(session)
         self.brand_repo = BrandRepository(session)
         self.price_calculator = PriceCalculator()
-        self.seo_generator = SeoGenerator()
         self.seo_service = SeoGeneratorService(api_key=settings.anthropic_api_key)
         self.seo_repo = ProductSeoRepository(session)
 
@@ -167,6 +166,7 @@ class CollectionService:
             data=product_data,
             source_id=source_id,
         )
+        product_id = product.id  # SEO 오류 후 세션 만료 대비
 
         # 3. PriceCalculator로 판매가 계산 (Phase 1: 기본 계산만)
         selling_price = None
@@ -183,17 +183,27 @@ class CollectionService:
         except ValueError as e:
             logger.warning(f"판매가 계산 실패: {e}")
 
-        # 4. SEO 데이터 생성 + 저장
+        # 4. SEO 데이터 생성 + 저장 (실패해도 수집 성공으로 처리)
         try:
-            seo_data = await self.seo_service.generate(
-                product_data=product_data,
-                product_id=product.id,
-            )
-            await self.seo_repo.create_async(**seo_data)
-            logger.info(f"SEO 생성 완료 (product_id={product.id}, status={seo_data['status']})")
+            # 이미 SEO가 있으면 스킵 (UniqueConstraint 위반 방지)
+            existing_seo = await self.seo_repo.find_by_product_id(product_id)
+            if existing_seo is None:
+                seo_data = await self.seo_service.generate(
+                    product_data=product_data,
+                    product_id=product_id,
+                )
+                await self.seo_repo.create_async(**seo_data)
+                logger.info(f"SEO 생성 완료 (product_id={product_id}, status={seo_data['status']})")
+            else:
+                logger.info(f"SEO 이미 존재, 스킵 (product_id={product_id})")
         except Exception as e:
-            logger.warning(f"SEO 생성 실패 (product_id={product.id}): {e}")
-            await self.session.rollback()  # unique constraint 위반 등으로 세션 오염 방지
+            logger.warning(f"SEO 생성 실패 (product_id={product_id}): {e}")
+            # DB 에러 발생 시 세션이 broken 상태가 됨 → rollback으로 복구
+            # (이후 log_repo.create_async()가 정상 실행되도록)
+            try:
+                await self.session.rollback()
+            except Exception:
+                pass
 
         # 5. 수집 로그 기록
         log_message = ip_warning if ip_warning else None

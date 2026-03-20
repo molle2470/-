@@ -51,15 +51,22 @@ export async function sendCollectedProduct(
   product: ProductData,
 ): Promise<{ product_id: number; warning?: string } | null> {
   try {
+    console.log("[API] 수집 요청 전송:", `${API_BASE_URL}/extension/products`)
     const headers = await getHeaders()
     const res = await fetch(`${API_BASE_URL}/extension/products`, {
       method: "POST",
       headers,
       body: JSON.stringify({ source, product }),
     })
-    if (!res.ok) return null
+    console.log("[API] 응답 상태:", res.status)
+    if (!res.ok) {
+      const text = await res.text()
+      console.error("[API] 오류 응답:", res.status, text)
+      return null
+    }
     return res.json()
-  } catch {
+  } catch (e) {
+    console.error("[API] fetch 실패:", e)
     return null
   }
 }

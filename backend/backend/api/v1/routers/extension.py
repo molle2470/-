@@ -24,6 +24,13 @@ from backend.dtos.extension import (
 router = APIRouter(prefix="/extension", tags=["extension"])
 
 
+def _debug_log(msg: str) -> None:
+    """디버그 로그를 파일에 기록 (stdout이 안 보이는 환경 대비)"""
+    import datetime
+    with open("debug_collect.log", "a", encoding="utf-8") as f:
+        f.write(f"[{datetime.datetime.now()}] {msg}\n")
+
+
 def verify_extension_key(x_extension_key: str = Header(...)) -> str:
     """익스텐션 API 키 검증"""
     if x_extension_key != settings.extension_api_key:
@@ -75,18 +82,24 @@ async def receive_collected_product(
     session: AsyncSession = Depends(get_write_session_dependency),
 ) -> dict:
     """수집된 상품 데이터 수신"""
-    service = CollectionService(session)
-    # TODO: source_id를 source 문자열로부터 조회하는 로직 추가
-    result = await service.process_collected_product(
-        source=data.source,
-        product_data=data.product,
-        source_id=1,  # Phase 1: 무신사 고정. Phase 2에서 소싱처 조회
-    )
-    product = result["product"]
-    response: dict = {"status": "ok", "product_id": product.id}
-    if result.get("ip_warning"):
-        response["warning"] = result["ip_warning"]
-    return response
+    import traceback, sys
+    _debug_log("요청 도착: " + data.product.name[:30])
+    try:
+        service = CollectionService(session)
+        result = await service.process_collected_product(
+            source=data.source,
+            product_data=data.product,
+            source_id=1,
+        )
+        product = result["product"]
+        _debug_log(f"성공 product_id={product.id}")
+        response: dict = {"status": "ok", "product_id": product.id}
+        if result.get("ip_warning"):
+            response["warning"] = result["ip_warning"]
+        return response
+    except Exception as e:
+        _debug_log(f"에러: {type(e).__name__}: {e}\n{traceback.format_exc()}")
+        raise
 
 
 @router.post("/products/{product_id}/changes")

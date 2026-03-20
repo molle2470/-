@@ -36,9 +36,12 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 
 // Content Script 메시지 핸들러
 chrome.runtime.onMessage.addListener((message: ContentMessage, sender, sendResponse) => {
+  console.log("[SW] 메시지 수신:", message.type)
   if (message.type === "COLLECT_BUTTON_CLICKED") {
+    console.log("[SW] 수집 요청 처리 시작", message.data?.name)
     // 개별 수집: 백엔드로 전송
     sendCollectedProduct("musinsa", message.data).then((result) => {
+      console.log("[SW] 수집 결과:", result)
       // 수집 성공 시 product_id 저장 (네이버 SEO 자동입력에 활용)
       if (result?.product_id) {
         lastCollectedProductId = result.product_id
