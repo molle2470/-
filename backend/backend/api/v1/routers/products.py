@@ -12,7 +12,7 @@ from backend.db.orm import get_read_session_dependency, get_write_session_depend
 from backend.domain.product.model import ProductStatusEnum
 from backend.domain.product.seo_repository import ProductSeoRepository
 from backend.domain.product.service import ProductService
-from backend.dtos.seo import SeoUpdateRequest
+from backend.dtos.seo import SeoResponse, SeoUpdateRequest
 
 router = APIRouter(prefix="/products", tags=["products"])
 
@@ -85,7 +85,7 @@ async def get_product(
     }
 
 
-@router.get("/{product_id}/seo")
+@router.get("/{product_id}/seo", response_model=SeoResponse)
 async def get_product_seo(
     product_id: int,
     market_type: str = Query(default="naver"),
@@ -133,4 +133,6 @@ async def update_product_seo(
     update_fields["edited_at"] = datetime.now(tz=timezone.utc)
 
     updated = await repo.update_async(seo.id, **update_fields)
+    if not updated:
+        raise HTTPException(status_code=500, detail="SEO 데이터 업데이트에 실패했습니다")
     return {"status": "ok", "seo_id": updated.id}
