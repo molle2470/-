@@ -84,7 +84,7 @@ export function ProductsTable({ products }: Props) {
               상품명
             </th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-              원가
+              구매가
             </th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
               재고 상태
@@ -137,7 +137,7 @@ export function ProductsTable({ products }: Props) {
                   {product.name}
                 </a>
               </td>
-              {/* 원가 */}
+              {/* 구매가 (로그인 계정 등급 할인 적용) */}
               <td className="px-4 py-3 whitespace-nowrap text-gray-700">
                 {product.original_price.toLocaleString()}원
               </td>

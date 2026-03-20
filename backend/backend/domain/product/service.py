@@ -155,13 +155,20 @@ class ProductService:
         Returns:
             생성되거나 기존에 존재하는 Product 객체
         """
-        # 중복 체크
+        # 중복 체크 — 기존 상품이면 가격/재고 업데이트 후 반환 (upsert)
         existing = await self.repo.find_by_source_product_id(
             source_id=source_id,
             source_product_id=data.source_product_id,
         )
         if existing is not None:
-            return existing
+            return await self.repo.update_async(
+                existing.id,
+                original_price=data.original_price,
+                name=data.name,
+                stock_status=data.stock_status,
+                thumbnail_url=data.thumbnail_url,
+                last_crawled_at=datetime.now(tz=timezone.utc),
+            )
 
         # 브랜드 조회 — 없으면 자동 생성 (is_ip_approved=False로 등록)
         brand_repo = BrandRepository(self.session)

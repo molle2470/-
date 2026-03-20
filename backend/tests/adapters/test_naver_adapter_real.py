@@ -3,11 +3,14 @@ import pytest
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
+# BCrypt salt 형식의 테스트 시크릿 (실제 API와 동일한 형식)
+TEST_BCRYPT_SALT = "$2b$04$PncV.R1TfZ1J5ZEZzyt8iO"
+
 
 @pytest.fixture
 def adapter():
     from backend.adapters.naver_adapter import NaverAdapter
-    return NaverAdapter("test_client_id", "test_client_secret", "test_channel_id")
+    return NaverAdapter("test_client_id", TEST_BCRYPT_SALT, "test_channel_id")
 
 
 def make_mock_response(json_data: dict) -> MagicMock:
@@ -18,9 +21,10 @@ def make_mock_response(json_data: dict) -> MagicMock:
 
 
 @pytest.mark.asyncio
-async def test_get_access_token_hmac_signature(adapter):
-    """HMAC-SHA256 서명이 올바르게 생성되는지 검증"""
-    import base64, hashlib, hmac as hmac_lib
+async def test_get_access_token_bcrypt_signature(adapter):
+    """BCrypt 서명이 올바르게 생성되는지 검증"""
+    import base64
+    import bcrypt
 
     captured: dict = {}
 
@@ -34,13 +38,9 @@ async def test_get_access_token_hmac_signature(adapter):
     assert token == "tok"
     ts = captured["timestamp"]
     password = f"test_client_id_{ts}"
-    expected_sign = base64.urlsafe_b64encode(
-        hmac_lib.new(
-            "test_client_secret".encode("utf-8"),
-            password.encode("utf-8"),
-            hashlib.sha256,
-        ).digest()
-    ).decode("utf-8")
+    # client_secret(BCrypt salt)로 서명 생성
+    expected_hash = bcrypt.hashpw(password.encode("utf-8"), TEST_BCRYPT_SALT.encode("utf-8"))
+    expected_sign = base64.b64encode(expected_hash).decode("utf-8")
     assert captured["client_secret_sign"] == expected_sign
     assert captured["grant_type"] == "client_credentials"
 

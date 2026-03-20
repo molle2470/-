@@ -8,6 +8,7 @@
     "https://*.musinsa.com/*",
     "https://api.musinsa.com/*",
     "http://localhost:28080/*",
+    "http://localhost:28081/*",
     "https://sell.smartstore.naver.com/*"
   ],
   "background": {
@@ -16,7 +17,19 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://www.musinsa.com/app/goods/*"],
+      "matches": [
+        "https://www.musinsa.com/app/goods/*",
+        "https://www.musinsa.com/products/*"
+      ],
+      "js": ["src/content/musinsa-fetch-interceptor.ts"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://www.musinsa.com/app/goods/*",
+        "https://www.musinsa.com/products/*"
+      ],
       "js": ["src/content/musinsa-interceptor.ts"],
       "run_at": "document_start"
     },

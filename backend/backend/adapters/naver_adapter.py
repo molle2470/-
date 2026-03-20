@@ -9,11 +9,10 @@
 참고: https://apicenter.commerce.naver.com/
 """
 import base64
-import hashlib
-import hmac
 import time
 from typing import Any
 
+import bcrypt
 import httpx
 
 from backend.adapters.base_adapter import BaseMarketAdapter
@@ -39,19 +38,16 @@ class NaverAdapter(BaseMarketAdapter):
         await self.http_client.aclose()
 
     async def _get_access_token(self) -> str:
-        """OAuth2 액세스 토큰 발급 (HMAC-SHA256 서명, 만료 30초 전 갱신)."""
+        """OAuth2 액세스 토큰 발급 (BCrypt 서명, 만료 30초 전 갱신)."""
         # 캐시된 토큰이 유효하면 재사용
         if self._access_token and time.time() < self._token_expires_at - 30:
             return self._access_token
 
         timestamp = str(int(time.time() * 1000))
         password = f"{self.client_id}_{timestamp}"
-        hashed = hmac.new(
-            self.client_secret.encode("utf-8"),
-            password.encode("utf-8"),
-            hashlib.sha256,
-        ).digest()
-        client_secret_sign = base64.urlsafe_b64encode(hashed).decode("utf-8")
+        # client_secret을 BCrypt salt로 사용
+        hashed = bcrypt.hashpw(password.encode("utf-8"), self.client_secret.encode("utf-8"))
+        client_secret_sign = base64.b64encode(hashed).decode("utf-8")
 
         response = await self.http_client.post(
             self.AUTH_URL,

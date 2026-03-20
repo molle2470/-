@@ -1,9 +1,6 @@
 /** 마켓 등록 관련 클라이언트 사이드 API 클라이언트 */
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_ENV === "development"
-    ? (process.env.NEXT_PUBLIC_API_URL_DEV ?? "http://localhost:28080")
-    : (process.env.NEXT_PUBLIC_API_URL_PROD ?? "http://localhost:28080")
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:28080"
 
 /** 마켓 등록 항목 */
 export interface MarketListing {

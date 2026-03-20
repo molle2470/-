@@ -15,15 +15,18 @@ import type { ProductData, BackgroundMessage } from "../shared/types"
 let capturedProductData: ProductData | null = null
 
 // __NEXT_DATA__에서 상품 데이터 직접 파싱 (무신사 /products/ 페이지)
-function parseFromNextData(): ProductData | null {
+function parseFromNextData(): ProductData | null | "not_logged_in" {
   try {
-    // Content Script는 isolated world라 window.__NEXT_DATA__ 접근 불가
-    // HTML에 삽입된 <script id="__NEXT_DATA__"> 태그에서 직접 읽음
     const el = document.getElementById("__NEXT_DATA__")
     if (!el) return null
-    const nextData = JSON.parse(el.textContent || "")
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data = (nextData as any)?.props?.pageProps?.meta?.data
+    const nextData = JSON.parse(el.textContent || "") as any
+    const pageProps = nextData?.props?.pageProps
+
+    // 로그인 여부 확인 — 비로그인 시 수집 차단 (정상가로 수집되는 문제 방지)
+    if (!pageProps?.shared?.loggedIn) return "not_logged_in"
+
+    const data = pageProps?.meta?.data
     if (!data || !data.goodsNo) return null
 
     // 상품명 + 품번(styleNo) 조합 — styleNo가 이미 포함된 경우 중복 방지
@@ -33,10 +36,15 @@ function parseFromNextData(): ProductData | null {
       ? `${goodsNm} / ${styleNo}`
       : goodsNm
 
-    const priceObj = data.normalPrice as Record<string, number> | number | undefined
-    const price = typeof priceObj === "object" && priceObj !== null
-      ? (priceObj.normalPrice ?? priceObj.salePrice ?? 0)
-      : Number(priceObj ?? 0)
+    // 실구매가 = salePrice × (1 - memberDiscountRate / 100) — 등급 할인 항상 적용 가능
+    const goodsPriceObj = data.goodsPrice as Record<string, number> | undefined
+    const salePrice = typeof goodsPriceObj === "object" && goodsPriceObj !== null
+      ? (goodsPriceObj.salePrice ?? goodsPriceObj.normalPrice ?? 0)
+      : Number(data.normalPrice ?? 0)
+    const memberDiscountRate = typeof goodsPriceObj === "object" && goodsPriceObj !== null
+      ? Number(goodsPriceObj.memberDiscountRate ?? 0)
+      : 0
+    const price = Math.round(salePrice * (1 - memberDiscountRate / 100))
 
     const imgBase = "https://image.msscdn.net"
 
@@ -88,7 +96,7 @@ function updateButtonState(state: ButtonState): void {
 
   switch (state) {
     case "loading":
-      button.textContent = "데이터 로딩중..."
+      button.textContent = "무신사 로그인 필요"
       button.disabled = true
       button.style.background = "#6b7280"
       break
@@ -177,7 +185,9 @@ createCollectButton()
 
 // __NEXT_DATA__ 직접 파싱 시도 (/products/ 페이지)
 const nextDataProduct = parseFromNextData()
-if (nextDataProduct) {
+if (nextDataProduct === "not_logged_in") {
+  // 비로그인 → 버튼 비활성화 유지 (기본 "무신사 로그인 필요" 상태)
+} else if (nextDataProduct) {
   capturedProductData = nextDataProduct
   updateButtonState("ready")
 }
