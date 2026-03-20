@@ -2,14 +2,17 @@
 
 GET 엔드포인트는 대시보드 읽기 허용 (인증 불필요).
 """
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.db.orm import get_read_session_dependency
+from backend.db.orm import get_read_session_dependency, get_write_session_dependency
 from backend.domain.product.model import ProductStatusEnum
+from backend.domain.product.seo_repository import ProductSeoRepository
 from backend.domain.product.service import ProductService
+from backend.dtos.seo import SeoUpdateRequest
 
 router = APIRouter(prefix="/products", tags=["products"])
 
@@ -80,3 +83,54 @@ async def get_product(
         "status": product.status,
         "created_at": product.created_at.isoformat() if product.created_at else None,
     }
+
+
+@router.get("/{product_id}/seo")
+async def get_product_seo(
+    product_id: int,
+    market_type: str = Query(default="naver"),
+    session: AsyncSession = Depends(get_read_session_dependency),
+):
+    """상품 SEO 데이터 조회"""
+    repo = ProductSeoRepository(session)
+    seo = await repo.find_by_product_id(product_id, market_type)
+    if not seo:
+        raise HTTPException(status_code=404, detail="SEO 데이터가 없습니다")
+    return {
+        "id": seo.id,
+        "product_id": seo.product_id,
+        "market_type": seo.market_type,
+        "optimized_name": seo.optimized_name,
+        "tags": seo.tags,
+        "naver_category_id": seo.naver_category_id,
+        "brand": seo.brand,
+        "material": seo.material,
+        "color": seo.color,
+        "gender": seo.gender,
+        "age_group": seo.age_group,
+        "origin": seo.origin,
+        "status": seo.status,
+        "generated_at": seo.generated_at.isoformat() if seo.generated_at else None,
+        "edited_at": seo.edited_at.isoformat() if seo.edited_at else None,
+    }
+
+
+@router.patch("/{product_id}/seo")
+async def update_product_seo(
+    product_id: int,
+    data: SeoUpdateRequest,
+    market_type: str = Query(default="naver"),
+    session: AsyncSession = Depends(get_write_session_dependency),
+):
+    """상품 SEO 데이터 수정 (대시보드에서 편집 시)"""
+    repo = ProductSeoRepository(session)
+    seo = await repo.find_by_product_id(product_id, market_type)
+    if not seo:
+        raise HTTPException(status_code=404, detail="SEO 데이터가 없습니다")
+
+    update_fields = data.model_dump(exclude_unset=True)
+    update_fields["status"] = "edited"
+    update_fields["edited_at"] = datetime.now(tz=timezone.utc)
+
+    updated = await repo.update_async(seo.id, **update_fields)
+    return {"status": "ok", "seo_id": updated.id}
