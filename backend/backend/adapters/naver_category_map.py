@@ -57,11 +57,11 @@ MUSINSA_TO_NAVER: dict[str, NaverCategoryInfo] = {
     "벨트": NaverCategoryInfo("50000157", "ACCESSORY"),
 }
 
-# 매핑 안 될 때 기본값 (패션잡화 > 기타 액세서리 카테고리, ETC 고시 유형)
-# 주의: 50000803은 스니커즈 카테고리이므로 기본값으로 사용 불가.
-# 50000803 대신 패션잡화 > 기타 카테고리 ID로 교체 필요.
-# TODO: 네이버 카테고리 API로 실제 "패션잡화 > 기타" leafCategoryId 확인 후 업데이트
-DEFAULT_NAVER_INFO = NaverCategoryInfo("50000166", "ETC")
+# 매핑 안 될 때 기본값: 스니커즈 카테고리 사용
+# - 왜?: 50000166 (패션잡화>기타)은 네이버에서 유효하지 않은 ID로 확인됨 (400 에러 발생)
+# - 50000803 (스니커즈)은 실제 API 테스트에서 동작 확인된 유효한 ID
+# - 우리가 소싱하는 상품 대부분이 신발이므로 스니커즈를 기본값으로 사용
+DEFAULT_NAVER_INFO = NaverCategoryInfo("50000803", "SHOES")
 
 
 def get_naver_category_info(source_category: str | None) -> NaverCategoryInfo:

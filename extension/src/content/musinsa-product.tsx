@@ -48,13 +48,11 @@ function parseFromNextData(): ProductData | null | "not_logged_in" {
 
     const imgBase = "https://image.msscdn.net"
 
-    // 무신사 __NEXT_DATA__ 구조에서 카테고리 추출
-    const sourceCategory = String(
-      data.categoryInfo?.categoryName
-      || data.category?.categoryName
-      || data.goodsCategory?.categoryName
-      || ""
-    ) || null
+    // 무신사 카테고리 추출
+    // - 왜 baseCategoryFullPath?: 실제 API 응답 확인 결과 이 필드가
+    //   "Shoes > 스니커즈 > 패션스니커즈화" 형태로 전체 경로를 문자열로 줌.
+    //   백엔드 키워드 매핑("스니커즈" in source_category)과 바로 호환됨.
+    const sourceCategory = String(data.baseCategoryFullPath || "") || null
 
     return {
       name: productName,

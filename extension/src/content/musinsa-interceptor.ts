@@ -67,6 +67,9 @@ function parseMusinsaProduct(apiData: Record<string, unknown>): ProductData | nu
         ? data.imageUrls.filter((item): item is string => typeof item === "string")
         : [],
       options: [],
+      // baseCategoryFullPath: "Shoes > 스니커즈 > 패션스니커즈화" 형태
+      // - 왜?: 백엔드 키워드 매핑과 호환되는 유일한 문자열 필드 (실제 API 확인)
+      source_category: String(data.baseCategoryFullPath || "") || null,
     }
   } catch {
     return null

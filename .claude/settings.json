@@ -4,8 +4,7 @@
       "Edit:*",
       "Write:*",
       "MultiEdit:*",
-      "NotebookEdit:*",
-      "Bash:*"
+      "NotebookEdit:*"
     ],
     "defaultMode": "acceptEdits"
   },

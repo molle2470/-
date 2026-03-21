@@ -73,14 +73,35 @@ class NaverAdapter(BaseMarketAdapter):
         }
 
     async def upload_image(self, image_url: str) -> str:
-        """외부 이미지 URL을 네이버 호스팅으로 업로드."""
-        access_token = await self._get_access_token()
-        headers = self._get_headers(access_token)
+        """외부 이미지 URL을 다운로드 후 네이버 호스팅으로 업로드.
 
+        왜 이렇게 하냐면:
+        네이버 API는 "무신사 이미지 주소(URL)"를 직접 받아주지 않는다.
+        반드시 이미지 파일 자체를 네이버 서버에 먼저 올려야 상품 등록이 된다.
+        그래서 ① 무신사에서 이미지를 다운로드 → ② 네이버에 직접 업로드 두 단계를 거친다.
+        """
+        # ① 무신사 CDN에서 이미지를 바이너리(파일 데이터)로 다운로드한다.
+        # - 왜?: 네이버가 URL이 아닌 실제 파일을 요구하기 때문
+        image_response = await self.http_client.get(image_url)
+        image_response.raise_for_status()
+        image_bytes = image_response.content
+
+        # 이미지 종류(JPG, PNG 등)를 응답 헤더에서 읽어온다.
+        # - 왜?: 파일 이름에 올바른 확장자를 붙여야 네이버가 이미지를 제대로 인식함
+        content_type = image_response.headers.get("content-type", "image/jpeg")
+        ext = content_type.split("/")[-1].split(";")[0].strip() or "jpg"
+        filename = f"product.{ext}"
+
+        # ② 네이버 이미지 업로드 API로 파일을 직접 전송한다.
+        # - 엔드포인트: v1/product-images/upload (v2는 이 기능 없음 → 404 에러 발생)
+        # - 전송 방식: multipart/form-data (파일 첨부 방식, JSON이 아님)
+        #   왜?: 네이버 API 공식 문서가 파일 바이너리 전송 방식만 지원하도록 명시되어 있음
+        access_token = await self._get_access_token()
+        files = {"imageFiles": (filename, image_bytes, content_type)}
         response = await self.http_client.post(
-            f"{self.BASE_URL}/v2/product-images/upload",
-            headers=headers,
-            json={"imageUrls": [image_url]},
+            f"{self.BASE_URL}/v1/product-images/upload",
+            headers={"Authorization": f"Bearer {access_token}"},
+            files=files,
         )
         response.raise_for_status()
         images = response.json().get("images", [])
@@ -104,7 +125,14 @@ class NaverAdapter(BaseMarketAdapter):
             **({"material": "상세페이지 참조", "color": "상세페이지 참조", "size": "상세페이지 참조",
                 "manufacturer": "상세페이지 참조", "importDeclaration": "상세페이지 참조",
                 "caution": "상세페이지 참조", "warrantyPolicy": "소비자분쟁해결규정에 따름",
-                "afterServiceDirector": "판매자"} if notice_type != "ETC" else {})
+                "afterServiceDirector": "판매자"} if notice_type != "ETC" else {
+                # ETC 타입에 네이버가 필수로 요구하는 3가지 항목
+                # - 왜?: 네이버 API가 ETC 카테고리에도 modelName/itemName/manufacturer를
+                #   반드시 포함하도록 강제함. 없으면 400 에러 발생
+                "modelName": "상세페이지 참조",
+                "itemName": "상세페이지 참조",
+                "manufacturer": "상세페이지 참조",
+            })
         }
         return notice_data
 
@@ -131,11 +159,18 @@ class NaverAdapter(BaseMarketAdapter):
                 "images": {
                     "representativeImage": {"url": naver_image_url},
                 },
-                "salePrice": int(product_data["selling_price"]),
+                # 판매가는 반드시 10원 단위로 맞춰야 한다.
+                # - 왜?: 네이버 규정상 10원 단위 미만이면 400 에러 발생
+                # - 예) 155,025원 → 155,020원으로 내림
+                "salePrice": (int(product_data["selling_price"]) // 10) * 10,
                 "stockQuantity": 999,
                 "deliveryInfo": {
                     "deliveryType": "DELIVERY",
                     "deliveryAttributeType": "NORMAL",
+                    # 택배사 코드 (네이버 자체 코드 사용)
+                    # - 왜?: 네이버는 "CJ대한통운" 같은 한글 이름이 아닌 자체 영문 코드를 요구함
+                    # - CJGLS = CJ대한통운, POST = 우체국, HANJIN = 한진택배
+                    "deliveryCompany": "CJGLS",
                     "deliveryFee": {"deliveryFeeType": "FREE"},
                     "claimDeliveryInfo": {
                         "returnDeliveryFee": return_fee,
@@ -150,8 +185,14 @@ class NaverAdapter(BaseMarketAdapter):
                     "originAreaInfo": {
                         "originAreaCode": "0200037",
                         "content": "",
+                        # 수입자 정보 (해외구매대행 필수 항목)
+                        # - 왜?: 원산지가 해외(0200037=기타국가)면 수입자를 반드시 기재해야 함
+                        "importer": "상세페이지 참조",
                     },
                     "productInfoProvidedNotice": product_info_notice,
+                    # 미성년자 구매 가능 여부 (네이버 필수 항목)
+                    # - 왜?: 없으면 400 에러 발생. 의류/신발은 미성년자도 구매 가능하므로 True
+                    "minorPurchasable": True,
                 },
             },
             "smartstoreChannelProduct": {
@@ -174,7 +215,15 @@ class NaverAdapter(BaseMarketAdapter):
             headers=headers,
             json=payload,
         )
-        response.raise_for_status()
+
+        # 에러 시 네이버가 보내준 상세 메시지를 같이 출력한다.
+        # - 왜?: 400/401 같은 에러만 보면 뭐가 문제인지 모름.
+        #   네이버는 에러 원인을 JSON으로 함께 보내주므로 그걸 꺼내야 디버깅 가능.
+        if not response.is_success:
+            raise ValueError(
+                f"네이버 상품 등록 실패 ({response.status_code}): {response.text}"
+            )
+
         origin_no = response.json().get("originProductNo")
         return str(origin_no) if origin_no else None
 
